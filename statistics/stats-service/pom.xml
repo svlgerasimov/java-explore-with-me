@@ -6,11 +6,11 @@
 
     <parent>
         <groupId>ru.practicum</groupId>
-        <artifactId>statistics</artifactId>
+        <artifactId>ewm-statistics</artifactId>
         <version>0.0.1-SNAPSHOT</version>
     </parent>
 
-    <artifactId>stats-service</artifactId>
+    <artifactId>ewm-stats-service</artifactId>
     <version>0.0.1-SNAPSHOT</version>
 
 <!--    <properties>-->
@@ -19,9 +19,15 @@
 <!--        <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>-->
 <!--    </properties>-->
 
-    <name>emw-stats-service</name>
+    <name>EMW Statistics Service</name>
 
     <dependencies>
+        <dependency>
+            <groupId>ru.practicum</groupId>
+            <artifactId>ewm-stats-dto</artifactId>
+            <version>0.0.1-SNAPSHOT</version>
+        </dependency>
+
         <dependency>
             <groupId>org.springframework.boot</groupId>
             <artifactId>spring-boot-starter-actuator</artifactId>
@@ -50,11 +56,11 @@
             <version>42.5.1</version>
             <scope>runtime</scope>
         </dependency>
-<!--        <dependency>-->
-<!--            <groupId>com.h2database</groupId>-->
-<!--            <artifactId>h2</artifactId>-->
-<!--            <scope>runtime</scope>-->
-<!--        </dependency>-->
+        <dependency>
+            <groupId>com.h2database</groupId>
+            <artifactId>h2</artifactId>
+            <scope>runtime</scope>
+        </dependency>
         <dependency>
             <groupId>org.mapstruct</groupId>
             <artifactId>mapstruct</artifactId>

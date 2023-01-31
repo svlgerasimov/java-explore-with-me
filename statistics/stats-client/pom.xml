@@ -6,11 +6,11 @@
 
     <parent>
         <groupId>ru.practicum</groupId>
-        <artifactId>statistics</artifactId>
+        <artifactId>ewm-statistics</artifactId>
         <version>0.0.1-SNAPSHOT</version>
     </parent>
 
-    <artifactId>stats-client</artifactId>
+    <artifactId>ewm-stats-client</artifactId>
     <version>0.0.1-SNAPSHOT</version>
 
 <!--    <properties>-->
@@ -19,6 +19,6 @@
 <!--        <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>-->
 <!--    </properties>-->
 
-    <name>emw-stats-client</name>
+    <name>EWM Statistics Client</name>
 
 </project>

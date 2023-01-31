@@ -10,7 +10,7 @@
         <version>0.0.1-SNAPSHOT</version>
     </parent>
 
-    <artifactId>statistics</artifactId>
+    <artifactId>ewm-statistics</artifactId>
     <version>0.0.1-SNAPSHOT</version>
     <packaging>pom</packaging>
 
@@ -20,7 +20,7 @@
 <!--        <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>-->
 <!--    </properties>-->
 
-    <name>emw-statistics</name>
+    <name>EWM Statistics</name>
 
     <modules>
         <module>stats-service</module>

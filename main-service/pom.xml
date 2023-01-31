@@ -10,10 +10,10 @@
         <version>0.0.1-SNAPSHOT</version>
     </parent>
 
-    <artifactId>main-service</artifactId>
+    <artifactId>ewm-main-service</artifactId>
     <version>0.0.1-SNAPSHOT</version>
 
-    <name>emw-main-service</name>
+    <name>EMW Main Service</name>
 
     <dependencies>
         <dependency>
