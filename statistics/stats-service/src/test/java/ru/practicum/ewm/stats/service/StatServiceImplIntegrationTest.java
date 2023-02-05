@@ -98,10 +98,12 @@ class StatServiceImplIntegrationTest {
                 StatDtoOut.builder().app(app2).uri(uri1).hits(4L).build(),
                 StatDtoOut.builder().app(app1).uri(uri2).hits(4L).build(),
                 StatDtoOut.builder().app(app2).uri(uri2).hits(4L).build(),
-                StatDtoOut.builder().app(app1).uri(uri3).hits(4L).build(),
+                StatDtoOut.builder().app(app1).uri(uri3).hits(6L).build(),
                 StatDtoOut.builder().app(app2).uri(uri3).hits(4L).build());
 
         assertThat(statDtos).hasSameElementsAs(expected);
+        assertThat(statDtos.get(0)).extracting("app", "uri")
+                .containsExactly(app1, uri3);
     }
 
     @Test
@@ -118,10 +120,12 @@ class StatServiceImplIntegrationTest {
                 StatDtoOut.builder().app(app2).uri(uri1).hits(2L).build(),
                 StatDtoOut.builder().app(app1).uri(uri2).hits(2L).build(),
                 StatDtoOut.builder().app(app2).uri(uri2).hits(2L).build(),
-                StatDtoOut.builder().app(app1).uri(uri3).hits(2L).build(),
+                StatDtoOut.builder().app(app1).uri(uri3).hits(3L).build(),
                 StatDtoOut.builder().app(app2).uri(uri3).hits(2L).build());
 
         assertThat(statDtos).hasSameElementsAs(expected);
+        assertThat(statDtos.get(0)).extracting("app", "uri")
+                .containsExactly(app1, uri3);
     }
 
     @Test
@@ -138,10 +142,12 @@ class StatServiceImplIntegrationTest {
                 StatDtoOut.builder().app(app2).uri(uri1).hits(2L).build(),
                 StatDtoOut.builder().app(app1).uri(uri2).hits(2L).build(),
                 StatDtoOut.builder().app(app2).uri(uri2).hits(2L).build(),
-                StatDtoOut.builder().app(app1).uri(uri3).hits(2L).build(),
+                StatDtoOut.builder().app(app1).uri(uri3).hits(3L).build(),
                 StatDtoOut.builder().app(app2).uri(uri3).hits(2L).build());
 
         assertThat(statDtos).hasSameElementsAs(expected);
+        assertThat(statDtos.get(0)).extracting("app", "uri")
+                .containsExactly(app1, uri3);
     }
 
     @Test
@@ -158,10 +164,12 @@ class StatServiceImplIntegrationTest {
                 StatDtoOut.builder().app(app2).uri(uri1).hits(1L).build(),
                 StatDtoOut.builder().app(app1).uri(uri2).hits(1L).build(),
                 StatDtoOut.builder().app(app2).uri(uri2).hits(1L).build(),
-                StatDtoOut.builder().app(app1).uri(uri3).hits(1L).build(),
+                StatDtoOut.builder().app(app1).uri(uri3).hits(2L).build(),
                 StatDtoOut.builder().app(app2).uri(uri3).hits(1L).build());
 
         assertThat(statDtos).hasSameElementsAs(expected);
+        assertThat(statDtos.get(0)).extracting("app", "uri")
+                .containsExactly(app1, uri3);
     }
 
     @Test
@@ -200,10 +208,12 @@ class StatServiceImplIntegrationTest {
         List<StatDtoOut> expected = List.of(
                 StatDtoOut.builder().app(app1).uri(uri1).hits(4L).build(),
                 StatDtoOut.builder().app(app2).uri(uri1).hits(4L).build(),
-                StatDtoOut.builder().app(app1).uri(uri3).hits(4L).build(),
+                StatDtoOut.builder().app(app1).uri(uri3).hits(6L).build(),
                 StatDtoOut.builder().app(app2).uri(uri3).hits(4L).build());
 
         assertThat(statDtos).hasSameElementsAs(expected);
+        assertThat(statDtos.get(0)).extracting("app", "uri")
+                .containsExactly(app1, uri3);
     }
 
     @Test
@@ -218,10 +228,12 @@ class StatServiceImplIntegrationTest {
         List<StatDtoOut> expected = List.of(
                 StatDtoOut.builder().app(app1).uri(uri1).hits(2L).build(),
                 StatDtoOut.builder().app(app2).uri(uri1).hits(2L).build(),
-                StatDtoOut.builder().app(app1).uri(uri3).hits(2L).build(),
+                StatDtoOut.builder().app(app1).uri(uri3).hits(3L).build(),
                 StatDtoOut.builder().app(app2).uri(uri3).hits(2L).build());
 
         assertThat(statDtos).hasSameElementsAs(expected);
+        assertThat(statDtos.get(0)).extracting("app", "uri")
+                .containsExactly(app1, uri3);
     }
 
     @Test
@@ -236,10 +248,12 @@ class StatServiceImplIntegrationTest {
         List<StatDtoOut> expected = List.of(
                 StatDtoOut.builder().app(app1).uri(uri1).hits(2L).build(),
                 StatDtoOut.builder().app(app2).uri(uri1).hits(2L).build(),
-                StatDtoOut.builder().app(app1).uri(uri3).hits(2L).build(),
+                StatDtoOut.builder().app(app1).uri(uri3).hits(3L).build(),
                 StatDtoOut.builder().app(app2).uri(uri3).hits(2L).build());
 
         assertThat(statDtos).hasSameElementsAs(expected);
+        assertThat(statDtos.get(0)).extracting("app", "uri")
+                .containsExactly(app1, uri3);
     }
 
     @Test
@@ -254,9 +268,11 @@ class StatServiceImplIntegrationTest {
         List<StatDtoOut> expected = List.of(
                 StatDtoOut.builder().app(app1).uri(uri1).hits(1L).build(),
                 StatDtoOut.builder().app(app2).uri(uri1).hits(1L).build(),
-                StatDtoOut.builder().app(app1).uri(uri3).hits(1L).build(),
+                StatDtoOut.builder().app(app1).uri(uri3).hits(2L).build(),
                 StatDtoOut.builder().app(app2).uri(uri3).hits(1L).build());
 
         assertThat(statDtos).hasSameElementsAs(expected);
+        assertThat(statDtos.get(0)).extracting("app", "uri")
+                .containsExactly(app1, uri3);
     }
 }
