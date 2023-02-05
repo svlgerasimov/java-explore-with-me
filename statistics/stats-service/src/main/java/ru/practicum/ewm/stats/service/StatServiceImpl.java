@@ -52,6 +52,7 @@ public class StatServiceImpl implements StatService {
         }
         query.where(where);
         query.groupBy(app, uri);
+        query.orderBy(cb.desc(count));
 
         return entityManager.createQuery(query).getResultList();
 

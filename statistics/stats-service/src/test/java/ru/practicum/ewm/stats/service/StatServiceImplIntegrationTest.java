@@ -27,13 +27,13 @@ class StatServiceImplIntegrationTest {
     private final StatServiceImpl statService;
     private final EntityManager em;
 
-    private final static DateTimeFormatter dateTimeFormatter = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss");
+    private final DateTimeFormatter dateTimeFormatter = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss");
 
-    private static final String app1 = "service1";
-    private static final String app2 = "service2";
-    private static final String uri1 = "uri1";
-    private static final String uri2 = "uri2";
-    private static final String uri3 = "uri3";
+    private final String app1 = "service1";
+    private final String app2 = "service2";
+    private final String uri1 = "uri1";
+    private final String uri2 = "uri2";
+    private final String uri3 = "uri3";
 
     @Test
     @Sql(scripts = "/clear-stats.sql", executionPhase = Sql.ExecutionPhase.AFTER_TEST_METHOD)
