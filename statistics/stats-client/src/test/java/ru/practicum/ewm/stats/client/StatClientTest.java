@@ -59,7 +59,7 @@ class StatClientTest {
 
         StatDtoIn statDtoIn = StatDtoIn.builder()
                 .app("app1").uri("uri1").ip("10.10.10.10")
-                .timestamp(LocalDateTime.of(2000, 1, 1, 0 , 0))
+                .timestamp(LocalDateTime.of(2000, 1, 1, 0, 0))
                 .build();
 
         statClient.saveHit(statDtoIn);
