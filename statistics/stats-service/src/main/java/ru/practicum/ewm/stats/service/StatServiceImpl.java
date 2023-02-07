@@ -28,7 +28,7 @@ public class StatServiceImpl implements StatService {
     public void save(StatDtoIn statDtoIn) {
         StatEntity statEntity = statDtoInMapper.fromDto(statDtoIn);
         statsRepository.save(statEntity);
-        log.debug("Save statistics hit: " + statEntity);
+        log.debug("Save statistics hit: {}", statEntity);
     }
 
     @Override
