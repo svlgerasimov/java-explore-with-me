@@ -25,17 +25,9 @@ public class StatClient {
     }
 
     public void saveHit(StatDtoIn statDtoIn) {
-        MultiValueMap<String, String> bodyValues = new LinkedMultiValueMap<>();
-        bodyValues.add("app", statDtoIn.getApp());
-        bodyValues.add("uri", statDtoIn.getUri());
-        bodyValues.add("ip", statDtoIn.getIp());
-        bodyValues.add("timestamp", statDtoIn.getTimestamp().format(formatter));
-
         client.post()
                 .uri("/hit")
-                .contentType(MediaType.APPLICATION_JSON)
-                .accept(MediaType.APPLICATION_JSON)
-                .body(BodyInserters.fromFormData(bodyValues))
+                .bodyValue(statDtoIn)
                 .retrieve()
                 .toBodilessEntity()
                 .block();

@@ -12,7 +12,6 @@ import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.json.AutoConfigureJson;
 import org.springframework.boot.test.context.SpringBootTest;
-import org.springframework.web.reactive.function.client.WebClient;
 import org.springframework.web.reactive.function.client.WebClientResponseException;
 import ru.practicum.ewm.stats.dto.StatDtoIn;
 import ru.practicum.ewm.stats.dto.StatDtoOut;
@@ -23,7 +22,6 @@ import java.util.List;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
-import static org.junit.jupiter.api.Assertions.*;
 
 @SpringBootTest
 @AutoConfigureJson
@@ -49,7 +47,7 @@ class StatClientTest {
     void initialize() {
         String baseUrl = String.format("http://localhost:%s",
                 webServer.getPort());
-        baseUrl = "http://localhost:9090";
+//        baseUrl = "http://localhost:9090";
         statClient = new StatClient(baseUrl);
     }
 
@@ -61,18 +59,20 @@ class StatClientTest {
 
         StatDtoIn statDtoIn = StatDtoIn.builder()
                 .app("app1").uri("uri1").ip("10.10.10.10")
-                .timestamp(LocalDateTime.of(2000, 1, 1, 0 ,0))
+                .timestamp(LocalDateTime.of(2000, 1, 1, 0 , 0))
                 .build();
 
         statClient.saveHit(statDtoIn);
 
         RecordedRequest recordedRequest = webServer.takeRequest();
 
+        assertThat(recordedRequest.getMethod()).isEqualTo("POST");
+        assertThat(recordedRequest.getPath()).isEqualTo("/hit");
         assertThat(recordedRequest.getBody().readUtf8()).isEqualTo(objectMapper.writeValueAsString(statDtoIn));
     }
 
     @Test
-    void getStatsTest() throws JsonProcessingException{
+    void getStatsTest() throws JsonProcessingException, InterruptedException {
         List<StatDtoOut> stats = List.of(
                 StatDtoOut.builder().app("ewm-main-service").uri("/events/2").hits(9L).build(),
                 StatDtoOut.builder().app("ewm-main-service").uri("/events/1").hits(6L).build()
@@ -86,11 +86,14 @@ class StatClientTest {
                 LocalDateTime.of(2000, 1, 1, 0, 0),
                 LocalDateTime.of(2050, 1, 1, 0, 0), null, null);
 
+        RecordedRequest recordedRequest = webServer.takeRequest();
+
+        assertThat(recordedRequest.getMethod()).isEqualTo("GET");
         assertThat(actual).isEqualTo(stats);
     }
 
     @Test
-    void getStatsWithBadRequestTest() {
+    void getStatsWithBadRequestTest() throws InterruptedException {
         webServer.enqueue(new MockResponse()
                 .addHeader("content-type: application/json; charset=utf-8")
                 .setResponseCode(400));
@@ -99,5 +102,7 @@ class StatClientTest {
                 LocalDateTime.of(2000, 1, 1, 0, 0),
                 LocalDateTime.of(2050, 1, 1, 0, 0), null, null))
                 .isInstanceOf(WebClientResponseException.class);
+
+        webServer.takeRequest();
     }
 }
