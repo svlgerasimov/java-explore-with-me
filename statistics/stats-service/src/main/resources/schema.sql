@@ -13,5 +13,5 @@ CREATE TABLE IF NOT EXISTS stats (
     ip VARCHAR(15) NOT NULL,
     hit_timestamp TIMESTAMP WITHOUT TIME ZONE NOT NULL,
     CONSTRAINT pk_stats PRIMARY KEY (id),
-    CONSTRAINT fk_stats_app FOREIGN KEY (appId) REFERENCES apps(id)
+    CONSTRAINT fk_stats_app FOREIGN KEY (app_id) REFERENCES apps(id)
 );

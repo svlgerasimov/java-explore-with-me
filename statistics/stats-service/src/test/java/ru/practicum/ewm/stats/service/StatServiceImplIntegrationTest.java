@@ -59,7 +59,7 @@ class StatServiceImplIntegrationTest {
                 .element(0).hasFieldOrPropertyWithValue("name", app);
 
         List<StatEntity> statEntities =
-                em.createQuery("select s from StatEntity s", StatEntity.class)
+                em.createQuery("select s from StatEntity s join fetch s.app", StatEntity.class)
                         .getResultList();
         assertThat(statEntities).hasSize(1).element(0)
                 .hasNoNullFieldsOrProperties()

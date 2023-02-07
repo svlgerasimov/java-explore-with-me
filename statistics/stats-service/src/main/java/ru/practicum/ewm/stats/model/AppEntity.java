@@ -26,7 +26,7 @@ public class AppEntity {
         if (this == o) return true;
         if (o == null || getClass() != o.getClass()) return false;
         AppEntity appEntity = (AppEntity) o;
-        return Objects.nonNull(name) && name.equals(appEntity.name);
+        return Objects.nonNull(id) && id.equals(appEntity.id);
     }
 
     @Override
