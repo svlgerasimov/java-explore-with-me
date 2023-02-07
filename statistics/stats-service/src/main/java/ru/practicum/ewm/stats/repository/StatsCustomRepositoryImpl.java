@@ -21,7 +21,7 @@ public class StatsCustomRepositoryImpl implements StatsCustomRepository {
         CriteriaQuery<StatDtoOut> query = cb.createQuery(StatDtoOut.class);
         Root<StatEntity> root = query.from(StatEntity.class);
         Path<Object> ip = root.get("ip");
-        Path<Object> app = root.get("app");
+        Path<Object> app = root.get("app").get("name");
         Path<Object> uri = root.get("uri");
         Path<LocalDateTime> timestamp = root.get("timestamp");
         Expression<Long> count =

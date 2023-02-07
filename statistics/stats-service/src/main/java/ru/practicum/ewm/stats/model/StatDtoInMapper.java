@@ -8,5 +8,6 @@ import ru.practicum.ewm.stats.dto.StatDtoIn;
 public interface StatDtoInMapper {
 
     @Mapping(target = "id", ignore = true)
-    StatEntity fromDto(StatDtoIn dto);
+    @Mapping(target = "app", source = "appEntity")
+    StatEntity fromDto(StatDtoIn dto, AppEntity appEntity);
 }

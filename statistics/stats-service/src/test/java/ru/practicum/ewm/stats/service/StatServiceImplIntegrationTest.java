@@ -8,6 +8,7 @@ import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.context.jdbc.Sql;
 import ru.practicum.ewm.stats.dto.StatDtoIn;
 import ru.practicum.ewm.stats.dto.StatDtoOut;
+import ru.practicum.ewm.stats.model.AppEntity;
 import ru.practicum.ewm.stats.model.StatEntity;
 
 import javax.persistence.EntityManager;
@@ -51,13 +52,20 @@ class StatServiceImplIntegrationTest {
 
         statService.save(dto);
 
+        List<AppEntity> appEntities =
+                em.createQuery("select a from AppEntity a", AppEntity.class)
+                        .getResultList();
+        assertThat(appEntities).hasSize(1)
+                .element(0).hasFieldOrPropertyWithValue("name", app);
+
         List<StatEntity> statEntities =
                 em.createQuery("select s from StatEntity s", StatEntity.class)
                         .getResultList();
-        assertThat(statEntities).hasSize(1);
-        assertThat(statEntities.get(0)).hasNoNullFieldsOrProperties()
-                .extracting("app", "ip", "uri", "timestamp")
-                .containsExactly(app, ip, uri, timestamp);
+        assertThat(statEntities).hasSize(1).element(0)
+                .hasNoNullFieldsOrProperties()
+                .extracting("ip", "uri", "timestamp")
+                .containsExactly(ip, uri, timestamp);
+        assertThat(statEntities.get(0).getApp()).hasFieldOrPropertyWithValue("name", app);
     }
 
     @Test

@@ -2,7 +2,6 @@ package ru.practicum.ewm.stats.model;
 
 import lombok.Getter;
 import lombok.Setter;
-import lombok.ToString;
 
 import javax.persistence.*;
 import java.time.LocalDateTime;
@@ -12,14 +11,14 @@ import java.util.Objects;
 @Table(name = "stats")
 @Getter
 @Setter
-@ToString
 public class StatEntity {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    @Column(name = "app")
-    private String app;
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "app")
+    private AppEntity app;
 
     @Column(name = "uri")
     private String uri;
@@ -41,5 +40,15 @@ public class StatEntity {
     @Override
     public int hashCode() {
         return getClass().hashCode();
+    }
+
+    @Override
+    public String toString() {
+        return "StatEntity{" +
+                "app=" + app.getName() +
+                ", uri='" + uri + '\'' +
+                ", ip='" + ip + '\'' +
+                ", timestamp=" + timestamp +
+                '}';
     }
 }

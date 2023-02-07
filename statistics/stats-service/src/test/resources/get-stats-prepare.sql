@@ -1,3 +1,7 @@
+INSERT INTO apps (name)
+VALUES ('service1'),
+       ('service2');
+
 INSERT INTO stats (app, uri, ip, hit_timestamp)
 VALUES ('service1', 'uri1', '192.168.0.1', TIMESTAMP '2010-01-30 00:00:00'),
        ('service1', 'uri1', '192.168.0.1', TIMESTAMP '2010-01-31 00:00:00'),

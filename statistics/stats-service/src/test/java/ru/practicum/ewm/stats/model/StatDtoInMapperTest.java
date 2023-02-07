@@ -14,21 +14,23 @@ class StatDtoInMapperTest {
 
     @Test
     void fromDtoTest() {
-        String app = "ewm-main-service";
+        String appName = "ewm-main-service";
+        AppEntity app = new AppEntity();
+        app.setName(appName);
         String ip = "192.163.0.1";
         String uri = "/events/1";
         DateTimeFormatter dateTimeFormatter = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss");
         LocalDateTime timestamp = LocalDateTime.parse("2022-09-06 11:00:23", dateTimeFormatter);
         StatDtoIn dto = StatDtoIn.builder()
-                .app(app)
                 .ip(ip)
                 .uri(uri)
                 .timestamp(timestamp)
                 .build();
 
-        StatEntity entity = mapper.fromDto(dto);
+        StatEntity entity = mapper.fromDto(dto, app);
 
-        assertThat(entity).extracting("id", "app", "ip", "uri", "timestamp")
-                .containsExactly(null, app, ip, uri, timestamp);
+        assertThat(entity).extracting("id", "ip", "uri", "timestamp")
+                .containsExactly(null, ip, uri, timestamp);
+        assertThat(entity.getApp().getName()).isEqualTo(appName);
     }
 }
