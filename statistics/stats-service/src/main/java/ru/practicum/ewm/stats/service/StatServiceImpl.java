@@ -30,12 +30,11 @@ public class StatServiceImpl implements StatService {
     @Transactional
     public void save(StatDtoIn statDtoIn) {
         String appName = statDtoIn.getApp();
-        AppEntity app = appsRepository.findById(appName)
+        AppEntity app = appsRepository.findByName(appName)
                 .orElseGet(() -> {
                     AppEntity newApp = new AppEntity();
                     newApp.setName(appName);
-                    appsRepository.save(newApp);
-                    return newApp;
+                    return appsRepository.save(newApp);
                 });
 
         StatEntity statEntity = statDtoInMapper.fromDto(statDtoIn, app);

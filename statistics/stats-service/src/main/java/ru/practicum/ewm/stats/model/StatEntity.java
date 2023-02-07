@@ -17,7 +17,7 @@ public class StatEntity {
     private Long id;
 
     @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "app")
+    @JoinColumn(name = "app_id")
     private AppEntity app;
 
     @Column(name = "uri")
@@ -45,7 +45,7 @@ public class StatEntity {
     @Override
     public String toString() {
         return "StatEntity{" +
-                "app=" + app.getName() +
+                "appId=" + app.getId() +
                 ", uri='" + uri + '\'' +
                 ", ip='" + ip + '\'' +
                 ", timestamp=" + timestamp +
