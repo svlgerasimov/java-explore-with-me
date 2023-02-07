@@ -55,11 +55,5 @@ public class StatServiceImpl implements StatService {
         query.orderBy(cb.desc(count));
 
         return entityManager.createQuery(query).getResultList();
-
-//        return uris.isEmpty() ?
-//                (unique ? statsRepository.getAllStatisticsUnique(start, end)
-//                        : statsRepository.getAllStatistics(start, end))
-//                : (unique ? statsRepository.getUrisStatisticsUnique(start, end, uris)
-//                        : statsRepository.getUrisStatistics(start, end, uris));
     }
 }
