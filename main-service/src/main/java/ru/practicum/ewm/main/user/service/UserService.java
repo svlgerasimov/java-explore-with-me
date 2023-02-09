@@ -6,9 +6,9 @@ import ru.practicum.ewm.main.user.dto.UserDtoOut;
 import java.util.List;
 
 public interface UserService {
-    List<UserDtoOut> findUsers(List<Long> ids, Integer from, Integer size);
+    List<UserDtoOut> find(List<Long> ids, Integer from, Integer size);
 
-    UserDtoOut saveUser(UserDtoIn userDtoIn);
+    UserDtoOut add(UserDtoIn userDtoIn);
 
-    void deleteUser(Long id);
+    void delete(Long id);
 }

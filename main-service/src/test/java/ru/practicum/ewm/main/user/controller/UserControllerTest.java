@@ -21,6 +21,8 @@ import java.util.List;
 import static org.mockito.Mockito.*;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
+import static ru.practicum.ewm.main.testutil.TestUtils.checkBadRequest;
+import static ru.practicum.ewm.main.testutil.TestUtils.checkConflict;
 
 @WebMvcTest(controllers = UserController.class)
 class UserControllerTest {
@@ -33,11 +35,11 @@ class UserControllerTest {
     private MockMvc mvc;
 
     @Test
-    void findUsers_whenRequestWithoutNotRequiredParams_thenDefaultValues() throws Exception {
+    void find_whenRequestWithoutNotRequiredParams_thenDefaultValues() throws Exception {
         mvc.perform(get("/admin/users"))
                 .andExpect(status().isOk());
 
-        verify(userService).findUsers(
+        verify(userService).find(
                 eq(Collections.emptyList()),
                 eq(0),
                 eq(10)
@@ -45,7 +47,7 @@ class UserControllerTest {
     }
 
     @Test
-    void findUsers_whenCorrectRequest_thenStatusOkAndReturnListOfDto() throws Exception {
+    void find_whenCorrectRequest_thenStatusOkAndReturnListOfDto() throws Exception {
         List<UserDtoOut> dtos = List.of(
                 UserDtoOut.builder()
                         .id(1L)
@@ -58,7 +60,8 @@ class UserControllerTest {
                         .name("User Name 2")
                         .build()
         );
-        when(userService.findUsers(
+
+        when(userService.find(
                 eq(List.of(1L, 2L)),
                 eq(10),
                 eq(20)
@@ -73,41 +76,34 @@ class UserControllerTest {
                 .andExpect(content().json(objectMapper.writeValueAsString(dtos)));
     }
 
-    private void checkBadRequest(MockHttpServletRequestBuilder requestBuilder) throws Exception {
-        mvc.perform(requestBuilder)
-                .andExpect(status().isBadRequest())
-                .andExpect(jsonPath("$.status").value("BAD_REQUEST"))
-                .andExpect(jsonPath("$.reason").isNotEmpty())
-                .andExpect(jsonPath("$.message").isNotEmpty())
-                .andExpect(jsonPath("$.timestamp").isNotEmpty());
-    }
+
 
     @Test
-    void findUsers_whenNegativeFrom_ThenStatusBadRequest() throws Exception {
+    void find_whenNegativeFrom_ThenStatusBadRequest() throws Exception {
         MockHttpServletRequestBuilder requestBuilder =
                 get("/admin/users")
                         .param("from", "-1");
-        checkBadRequest(requestBuilder);
+        checkBadRequest(mvc, requestBuilder);
     }
 
     @Test
-    void findUsers_whenNegativeSize_ThenStatusBadRequest() throws Exception {
+    void find_whenNegativeSize_ThenStatusBadRequest() throws Exception {
         MockHttpServletRequestBuilder requestBuilder =
                 get("/admin/users")
                         .param("size", "-1");
-        checkBadRequest(requestBuilder);
+        checkBadRequest(mvc, requestBuilder);
     }
 
     @Test
-    void findUsers_whenZeroSize_ThenStatusBadRequest() throws Exception {
+    void find_whenZeroSize_ThenStatusBadRequest() throws Exception {
         MockHttpServletRequestBuilder requestBuilder =
                 get("/admin/users")
                         .param("size", "0");
-        checkBadRequest(requestBuilder);
+        checkBadRequest(mvc, requestBuilder);
     }
 
     @Test
-    void saveUser_whenValidDto_ThenStatusCreatedAndReturnDto() throws Exception {
+    void post_whenValidDto_ThenStatusCreatedAndReturnDto() throws Exception {
         UserDtoIn userDtoIn = UserDtoIn.builder()
                 .email("mail@mail.com")
                 .name("User Name")
@@ -118,7 +114,7 @@ class UserControllerTest {
                 .name("User Name")
                 .build();
 
-        when(userService.saveUser(eq(userDtoIn)))
+        when(userService.add(eq(userDtoIn)))
                 .thenReturn(userDtoOut);
 
         mvc.perform(post("/admin/users")
@@ -137,11 +133,11 @@ class UserControllerTest {
                         .contentType(MediaType.APPLICATION_JSON)
                         .accept(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(userDtoIn));
-        checkBadRequest(requestBuilder);
+        checkBadRequest(mvc, requestBuilder);
     }
 
     @Test
-    void saveUser_whenDtoWithBlankName_ThenStatusBadRequest() throws Exception {
+    void post_whenDtoWithBlankName_ThenStatusBadRequest() throws Exception {
         UserDtoIn userDtoIn = UserDtoIn.builder()
                 .email("mail@mail.com")
                 .name("   ")
@@ -150,7 +146,7 @@ class UserControllerTest {
     }
 
     @Test
-    void saveUser_whenDtoWithBlankEmail_ThenStatusBadRequest() throws Exception {
+    void post_whenDtoWithBlankEmail_ThenStatusBadRequest() throws Exception {
         UserDtoIn userDtoIn = UserDtoIn.builder()
                 .email("")
                 .name("User Name")
@@ -159,7 +155,7 @@ class UserControllerTest {
     }
 
     @Test
-    void saveUser_whenDtoWithInvalidEmail_ThenStatusBadRequest() throws Exception {
+    void post_whenDtoWithInvalidEmail_ThenStatusBadRequest() throws Exception {
         UserDtoIn userDtoIn = UserDtoIn.builder()
                 .email("mail.mail.com")
                 .name("User Name")
@@ -168,47 +164,43 @@ class UserControllerTest {
     }
 
     @Test
-    void saveUser_whenRequestWithoutBody_ThenStatusBadRequest() throws Exception {
+    void post_whenRequestWithoutBody_ThenStatusBadRequest() throws Exception {
         MockHttpServletRequestBuilder requestBuilder =
                 post("/admin/users")
                         .characterEncoding(StandardCharsets.UTF_8)
                         .contentType(MediaType.APPLICATION_JSON)
                         .accept(MediaType.APPLICATION_JSON);
-        checkBadRequest(requestBuilder);
+        checkBadRequest(mvc, requestBuilder);
     }
 
     @Test
-    void saveUser_whenServiceThrowsDataIntegrityViolation_ThenStatusConflict() throws Exception {
+    void post_whenServiceThrowsDataIntegrityViolation_ThenStatusConflict() throws Exception {
         UserDtoIn userDtoIn = UserDtoIn.builder()
                 .email("mail@mail.com")
                 .name("User Name")
                 .build();
 
-        when(userService.saveUser(any()))
+        when(userService.add(any()))
                 .thenThrow(new DataIntegrityViolationException("message"));
 
-        mvc.perform(post("/admin/users")
+        checkConflict(mvc,
+                post("/admin/users")
                         .characterEncoding(StandardCharsets.UTF_8)
                         .contentType(MediaType.APPLICATION_JSON)
                         .accept(MediaType.APPLICATION_JSON)
-                        .content(objectMapper.writeValueAsString(userDtoIn)))
-                .andExpect(status().isConflict())
-                .andExpect(jsonPath("$.status").value("CONFLICT"))
-                .andExpect(jsonPath("$.reason").isNotEmpty())
-                .andExpect(jsonPath("$.message").isNotEmpty())
-                .andExpect(jsonPath("$.timestamp").isNotEmpty());
+                        .content(objectMapper.writeValueAsString(userDtoIn)));
     }
 
     @Test
-    void deleteUser_whenSuccessful_ThenStatusNoContent() throws Exception {
+    void delete_whenSuccessful_ThenStatusNoContent() throws Exception {
         mvc.perform(delete("/admin/users/1"))
                 .andExpect(status().is(204));
     }
 
     @Test
-    void deleteUser_whenServiceThrowNotFound_ThenStatusNotFound() throws Exception {
+    void delete_whenServiceThrowNotFound_ThenStatusNotFound() throws Exception {
         doThrow(new NotFoundException("some message"))
-                .when(userService).deleteUser(anyLong());
+                .when(userService).delete(anyLong());
 
         mvc.perform(delete("/admin/users/1"))
                 .andExpect(status().isNotFound())

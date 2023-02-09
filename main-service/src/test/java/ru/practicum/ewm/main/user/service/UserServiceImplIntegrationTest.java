@@ -29,9 +29,9 @@ class UserServiceImplIntegrationTest {
     private final EntityManager em;
 
     @Test
-    @Sql(scripts = "/ru/practicum/ewm/main/sql/clear-users.sql",
+    @Sql(scripts = "/sql/clear-users.sql",
             executionPhase = Sql.ExecutionPhase.AFTER_TEST_METHOD)
-    void saveUserTest() {
+    void addTest() {
         String email = "mail@mail.com";
         String name = "User Name";
         UserDtoIn userDtoIn = UserDtoIn.builder()
@@ -39,7 +39,7 @@ class UserServiceImplIntegrationTest {
                 .name(name)
                 .build();
 
-        userService.saveUser(userDtoIn);
+        userService.add(userDtoIn);
 
         List<UserEntity> userEntities =
                 em.createQuery("select u from UserEntity u", UserEntity.class)
@@ -57,9 +57,9 @@ class UserServiceImplIntegrationTest {
     }
 
     @Test
-    @Sql(scripts = "/ru/practicum/ewm/main/sql/clear-users.sql",
+    @Sql(scripts = "/sql/clear-users.sql",
             executionPhase = Sql.ExecutionPhase.AFTER_TEST_METHOD)
-    void saveUser_whenSaveUserWithSameEmail_thenThrowDataIntegrityViolationException() {
+    void add_whenSaveUserWithSameEmail_thenThrowDataIntegrityViolationException() {
         String email = "mail@mail.com";
         UserDtoIn userDtoIn1 = UserDtoIn.builder()
                 .email(email)
@@ -70,19 +70,19 @@ class UserServiceImplIntegrationTest {
                 .name("User Name 2")
                 .build();
 
-        userService.saveUser(userDtoIn1);
+        userService.add(userDtoIn1);
 
-        assertThatThrownBy(() -> userService.saveUser(userDtoIn2))
+        assertThatThrownBy(() -> userService.add(userDtoIn2))
                 .isInstanceOf(DataIntegrityViolationException.class);
     }
 
     @Test
-    @Sql(scripts = "/ru/practicum/ewm/main/sql/clear-users.sql",
+    @Sql(scripts = "/sql/clear-users.sql",
             executionPhase = Sql.ExecutionPhase.AFTER_TEST_METHOD)
-    @Sql(scripts = "/ru/practicum/ewm/main/sql/get-users-prepare.sql",
+    @Sql(scripts = "/sql/get-users-prepare.sql",
             executionPhase = Sql.ExecutionPhase.BEFORE_TEST_METHOD)
-    void findUsers_noIdFiltersAndAllUsersInPage() {
-        List<UserDtoOut> userDtoOuts = userService.findUsers(Collections.emptyList(), 0, 10);
+    void find_noIdFiltersAndAllUsersInPage() {
+        List<UserDtoOut> userDtoOuts = userService.find(Collections.emptyList(), 0, 10);
 
         assertThat(userDtoOuts)
                 .extracting("id", "name", "email")
@@ -96,12 +96,12 @@ class UserServiceImplIntegrationTest {
     }
 
     @Test
-    @Sql(scripts = "/ru/practicum/ewm/main/sql/clear-users.sql",
+    @Sql(scripts = "/sql/clear-users.sql",
             executionPhase = Sql.ExecutionPhase.AFTER_TEST_METHOD)
-    @Sql(scripts = "/ru/practicum/ewm/main/sql/get-users-prepare.sql",
+    @Sql(scripts = "/sql/get-users-prepare.sql",
             executionPhase = Sql.ExecutionPhase.BEFORE_TEST_METHOD)
-    void findUsers_noIdFiltersAndPartOfUsersInPage() {
-        List<UserDtoOut> userDtoOuts = userService.findUsers(Collections.emptyList(), 2, 2);
+    void find_noIdFiltersAndPartOfUsersInPage() {
+        List<UserDtoOut> userDtoOuts = userService.find(Collections.emptyList(), 2, 2);
 
         assertThat(userDtoOuts)
                 .extracting("id", "name", "email")
@@ -109,12 +109,12 @@ class UserServiceImplIntegrationTest {
     }
 
     @Test
-    @Sql(scripts = "/ru/practicum/ewm/main/sql/clear-users.sql",
+    @Sql(scripts = "/sql/clear-users.sql",
             executionPhase = Sql.ExecutionPhase.AFTER_TEST_METHOD)
-    @Sql(scripts = "/ru/practicum/ewm/main/sql/get-users-prepare.sql",
+    @Sql(scripts = "/sql/get-users-prepare.sql",
             executionPhase = Sql.ExecutionPhase.BEFORE_TEST_METHOD)
-    void findUsers_withIdFiltersAndAllUsersInPage() {
-        List<UserDtoOut> userDtoOuts = userService.findUsers(List.of(2L, 3L, 4L), 0, 10);
+    void find_withIdFiltersAndAllUsersInPage() {
+        List<UserDtoOut> userDtoOuts = userService.find(List.of(2L, 3L, 4L), 0, 10);
 
         assertThat(userDtoOuts)
                 .extracting("id", "name", "email")
@@ -126,12 +126,12 @@ class UserServiceImplIntegrationTest {
     }
 
     @Test
-    @Sql(scripts = "/ru/practicum/ewm/main/sql/clear-users.sql",
+    @Sql(scripts = "/sql/clear-users.sql",
             executionPhase = Sql.ExecutionPhase.AFTER_TEST_METHOD)
-    @Sql(scripts = "/ru/practicum/ewm/main/sql/get-users-prepare.sql",
+    @Sql(scripts = "/sql/get-users-prepare.sql",
             executionPhase = Sql.ExecutionPhase.BEFORE_TEST_METHOD)
-    void findUsers_withIdFiltersAndPartUsersInPage() {
-        List<UserDtoOut> userDtoOuts = userService.findUsers(List.of(2L, 3L, 4L), 2, 1);
+    void find_withIdFiltersAndPartUsersInPage() {
+        List<UserDtoOut> userDtoOuts = userService.find(List.of(2L, 3L, 4L), 2, 1);
 
         assertThat(userDtoOuts)
                 .extracting("id", "name", "email")
@@ -139,12 +139,12 @@ class UserServiceImplIntegrationTest {
     }
 
     @Test
-    @Sql(scripts = "/ru/practicum/ewm/main/sql/clear-users.sql",
+    @Sql(scripts = "/sql/clear-users.sql",
             executionPhase = Sql.ExecutionPhase.AFTER_TEST_METHOD)
-    @Sql(scripts = "/ru/practicum/ewm/main/sql/get-users-prepare.sql",
+    @Sql(scripts = "/sql/get-users-prepare.sql",
             executionPhase = Sql.ExecutionPhase.BEFORE_TEST_METHOD)
-    void deleteUserTest() {
-        userService.deleteUser(3L);
+    void deleteTest() {
+        userService.delete(3L);
 
         List<UserEntity> userEntities =
                 em.createQuery("select u from UserEntity u", UserEntity.class)
@@ -157,12 +157,12 @@ class UserServiceImplIntegrationTest {
     }
 
     @Test
-    @Sql(scripts = "/ru/practicum/ewm/main/sql/clear-users.sql",
+    @Sql(scripts = "/sql/clear-users.sql",
             executionPhase = Sql.ExecutionPhase.AFTER_TEST_METHOD)
-    @Sql(scripts = "/ru/practicum/ewm/main/sql/get-users-prepare.sql",
+    @Sql(scripts = "/sql/get-users-prepare.sql",
             executionPhase = Sql.ExecutionPhase.BEFORE_TEST_METHOD)
-    void deleteUser_whenDeleteUserByAbsentId_thenThrowNotFoundException() {
-        assertThatThrownBy(() -> userService.deleteUser(10000L))
+    void delete_whenDeleteUserByAbsentId_thenThrowNotFoundException() {
+        assertThatThrownBy(() -> userService.delete(10000L))
                 .isInstanceOf(NotFoundException.class);
     }
 }

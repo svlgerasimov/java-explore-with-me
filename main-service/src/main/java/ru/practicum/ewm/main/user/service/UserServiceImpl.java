@@ -26,7 +26,7 @@ public class UserServiceImpl implements UserService {
     private final UserDtoMapper userDtoMapper;
 
     @Override
-    public List<UserDtoOut> findUsers(List<Long> ids, Integer from, Integer size) {
+    public List<UserDtoOut> find(List<Long> ids, Integer from, Integer size) {
         Pageable pageable = PageRequest.of(from / size, size);
         return userDtoMapper.toDto(
                 ids.isEmpty() ? userRepository.findAll(pageable).getContent()
@@ -36,17 +36,19 @@ public class UserServiceImpl implements UserService {
 
     @Override
     @Transactional
-    public UserDtoOut saveUser(UserDtoIn userDtoIn) {
+    public UserDtoOut add(UserDtoIn userDtoIn) {
         UserEntity userEntity = userDtoMapper.fromDto(userDtoIn);
         userEntity = userRepository.save(userEntity);
-        log.debug("Add user {}", userEntity);
-        return userDtoMapper.toDto(userEntity);
+        UserDtoOut userDtoOut = userDtoMapper.toDto(userEntity);
+        log.debug("Add user {}", userDtoOut);
+        return userDtoOut;
     }
 
     @Override
     @Transactional
-    public void deleteUser(Long id) {
+    public void delete(Long id) {
         findUserEntity(id);
+        log.debug("Delete user with id={}", id);
         userRepository.deleteById(id);
     }
 

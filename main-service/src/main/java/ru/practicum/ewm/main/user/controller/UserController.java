@@ -22,23 +22,23 @@ public class UserController {
     private final UserService userService;
 
     @GetMapping("/admin/users")
-    public List<UserDtoOut> findUsers(
+    public List<UserDtoOut> find(
             @RequestParam(defaultValue = "") List<Long> ids,
             @RequestParam(defaultValue = "0") @PositiveOrZero Integer from,
             @RequestParam(defaultValue = "10") @Positive Integer size
     ) {
-        return userService.findUsers(ids, from, size);
+        return userService.find(ids, from, size);
     }
 
     @PostMapping("/admin/users")
     @ResponseStatus(HttpStatus.CREATED)
-    public UserDtoOut saveUser(@Valid @RequestBody UserDtoIn userDtoIn) {
-        return userService.saveUser(userDtoIn);
+    public UserDtoOut post(@Valid @RequestBody UserDtoIn userDtoIn) {
+        return userService.add(userDtoIn);
     }
 
     @DeleteMapping("admin/users/{userId}")
     @ResponseStatus(HttpStatus.NO_CONTENT)
-    public void deleteUser(@PathVariable Long userId) {
-        userService.deleteUser(userId);
+    public void delete(@PathVariable Long userId) {
+        userService.delete(userId);
     }
 }
