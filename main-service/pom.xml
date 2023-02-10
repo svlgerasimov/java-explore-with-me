@@ -128,6 +128,16 @@
                     </dependency>
                 </dependencies>
             </plugin>
+            <plugin>
+                <groupId>org.jacoco</groupId>
+                <artifactId>jacoco-maven-plugin</artifactId>
+                <configuration>
+                    <excludes>
+                        <exclude>ru/practicum/ewm/main/user/model/QUserEntity.class</exclude>
+                        <exclude>ru/practicum/ewm/main/categories/model/QCategoryEntity.class</exclude>
+                    </excludes>
+                </configuration>
+            </plugin>
         </plugins>
     </build>
 
