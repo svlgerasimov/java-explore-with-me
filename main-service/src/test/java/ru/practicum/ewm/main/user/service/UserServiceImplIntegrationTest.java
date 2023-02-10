@@ -59,7 +59,7 @@ class UserServiceImplIntegrationTest {
     @Test
     @Sql(scripts = "/sql/clear-users.sql",
             executionPhase = Sql.ExecutionPhase.AFTER_TEST_METHOD)
-    void add_whenSaveUserWithSameEmail_thenThrowDataIntegrityViolationException() {
+    void add_whenSaveUserWithExistingEmail_thenThrowDataIntegrityViolationException() {
         String email = "mail@mail.com";
         UserDtoIn userDtoIn1 = UserDtoIn.builder()
                 .email(email)
@@ -104,7 +104,6 @@ class UserServiceImplIntegrationTest {
         List<UserDtoOut> userDtoOuts = userService.find(Collections.emptyList(), 2, 2);
 
         assertThat(userDtoOuts)
-                .extracting("id", "name", "email")
                 .hasSize(2);
     }
 
@@ -134,7 +133,6 @@ class UserServiceImplIntegrationTest {
         List<UserDtoOut> userDtoOuts = userService.find(List.of(2L, 3L, 4L), 2, 1);
 
         assertThat(userDtoOuts)
-                .extracting("id", "name", "email")
                 .hasSize(1);
     }
 

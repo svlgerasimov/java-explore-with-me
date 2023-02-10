@@ -45,9 +45,11 @@ public class CategoryServiceImpl implements CategoryService {
     }
 
     @Override
+    @Transactional
     public CategoryDtoOut patch(Long id, CategoryDtoInPatch categoryDtoInPatch) {
         CategoryEntity categoryEntity = findCategoryEntity(id);
         categoryDtoMapper.updateByDto(categoryEntity, categoryDtoInPatch);
+        categoryRepository.save(categoryEntity);
         CategoryDtoOut categoryDtoOut = categoryDtoMapper.toDto(categoryEntity);
         log.debug("Update category {}", categoryDtoOut);
         return categoryDtoOut;
