@@ -8,6 +8,7 @@ import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
 import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.http.MediaType;
 import org.springframework.test.web.servlet.MockMvc;
+import org.springframework.test.web.servlet.ResultActions;
 import ru.practicum.ewm.main.event.dto.*;
 import ru.practicum.ewm.main.event.service.EventService;
 import ru.practicum.ewm.main.event.testutil.EventTestBuilder;
@@ -36,6 +37,22 @@ class EventControllerTest {
     @Autowired
     private MockMvc mvc;
 
+    private ResultActions performPostRequest(EventDtoIn eventDtoIn) throws Exception {
+        return mvc.perform(post("/users/11/events")
+                .characterEncoding(StandardCharsets.UTF_8)
+                .contentType(MediaType.APPLICATION_JSON)
+                .accept(MediaType.APPLICATION_JSON)
+                .content(objectMapper.writeValueAsString(eventDtoIn)));
+    }
+
+    private ResultActions performPatchRequest(EventDtoInPatch eventDtoInPatch) throws Exception {
+        return mvc.perform(patch("/users/11/events/22")
+                .characterEncoding(StandardCharsets.UTF_8)
+                .contentType(MediaType.APPLICATION_JSON)
+                .accept(MediaType.APPLICATION_JSON)
+                .content(objectMapper.writeValueAsString(eventDtoInPatch)));
+    }
+
     @Test
     void post_whenValidDto_thenStatusCreatedAndReturnDto() throws Exception {
         EventTestBuilder eventTestBuilder = EventTestBuilder.defaultBuilder();
@@ -49,11 +66,7 @@ class EventControllerTest {
         assertThat(objectMapper.readValue(objectMapper.writeValueAsString(eventDtoIn), EventDtoIn.class))
                 .isEqualTo(eventDtoIn);
 
-        mvc.perform(post("/users/11/events")
-                        .characterEncoding(StandardCharsets.UTF_8)
-                        .contentType(MediaType.APPLICATION_JSON)
-                        .accept(MediaType.APPLICATION_JSON)
-                        .content(objectMapper.writeValueAsString(eventDtoIn)))
+        performPostRequest(eventDtoIn)
                 .andExpect(status().isCreated())
                 .andExpect(content().json(objectMapper.writeValueAsString(eventDtoOut)));
     }
@@ -70,10 +83,44 @@ class EventControllerTest {
     }
 
     @Test
-    void post_whenDtoWithBlankAnnotation_thenStatusBadRequest() throws Exception {
+    void post_whenDtoWithNullAnnotation_thenStatusBadRequest() throws Exception {
         checkBadPostRequest(EventTestBuilder.defaultBuilder()
-                .annotation("  ")
+                .annotation(null)
                 .buildEventDtoIn());
+    }
+
+    @Test
+    void post_whenDtoWithNormalLengthAnnotation_thenStatusCreated() throws Exception {
+        EventTestBuilder eventTestBuilder = EventTestBuilder.defaultBuilder();
+        EventDtoIn eventDtoIn = eventTestBuilder
+                .annotation("a".repeat(20))
+                .buildEventDtoIn();
+        performPostRequest(eventDtoIn)
+                .andExpect(status().isCreated());
+
+        eventDtoIn = eventTestBuilder
+                .annotation("a".repeat(2000))
+                .buildEventDtoIn();
+        performPostRequest(eventDtoIn)
+                .andExpect(status().isCreated());
+    }
+
+    @Test
+    void post_whenDtoWithShortAnnotation_thenStatusBadRequest() throws Exception {
+        checkBadPostRequest(
+                EventTestBuilder.defaultBuilder()
+                        .annotation("a".repeat(19))
+                        .buildEventDtoIn()
+        );
+    }
+
+    @Test
+    void post_whenDtoWithLongAnnotation_thenStatusBadRequest() throws Exception {
+        checkBadPostRequest(
+                EventTestBuilder.defaultBuilder()
+                        .annotation("a".repeat(2001))
+                        .buildEventDtoIn()
+        );
     }
 
     @Test
@@ -84,10 +131,44 @@ class EventControllerTest {
     }
 
     @Test
-    void post_whenDtoWithBlankDescription_thenStatusBadRequest() throws Exception {
+    void post_whenDtoWithNullDescription_thenStatusBadRequest() throws Exception {
         checkBadPostRequest(EventTestBuilder.defaultBuilder()
-                .description("  ")
+                .description(null)
                 .buildEventDtoIn());
+    }
+
+    @Test
+    void post_whenDtoWithNormalLengthDescription_thenStatusCreated() throws Exception {
+        EventTestBuilder eventTestBuilder = EventTestBuilder.defaultBuilder();
+        EventDtoIn eventDtoIn = eventTestBuilder
+                .description("a".repeat(20))
+                .buildEventDtoIn();
+        performPostRequest(eventDtoIn)
+                .andExpect(status().isCreated());
+
+        eventDtoIn = eventTestBuilder
+                .description("a".repeat(7000))
+                .buildEventDtoIn();
+        performPostRequest(eventDtoIn)
+                .andExpect(status().isCreated());
+    }
+
+    @Test
+    void post_whenDtoWithShortDescription_thenStatusBadRequest() throws Exception {
+        checkBadPostRequest(
+                EventTestBuilder.defaultBuilder()
+                        .description("a".repeat(19))
+                        .buildEventDtoIn()
+        );
+    }
+
+    @Test
+    void post_whenDtoWithLongDescription_thenStatusBadRequest() throws Exception {
+        checkBadPostRequest(
+                EventTestBuilder.defaultBuilder()
+                        .description("a".repeat(7001))
+                        .buildEventDtoIn()
+        );
     }
 
     @Test
@@ -121,15 +202,52 @@ class EventControllerTest {
     }
 
     @Test
+    void post_whenDtoWithNullTitle_thenStatusBadRequest() throws Exception {
+        checkBadPostRequest(EventTestBuilder.defaultBuilder()
+                .title(null)
+                .buildEventDtoIn());
+    }
+
+    @Test
+    void post_whenDtoWithNormalLengthTitle_thenStatusCreated() throws Exception {
+        EventTestBuilder eventTestBuilder = EventTestBuilder.defaultBuilder();
+        EventDtoIn eventDtoIn = eventTestBuilder
+                .title("a".repeat(3))
+                .buildEventDtoIn();
+        performPostRequest(eventDtoIn)
+                .andExpect(status().isCreated());
+
+        eventDtoIn = eventTestBuilder
+                .title("a".repeat(120))
+                .buildEventDtoIn();
+        performPostRequest(eventDtoIn)
+                .andExpect(status().isCreated());
+    }
+
+    @Test
+    void post_whenDtoWithShortTitle_thenStatusBadRequest() throws Exception {
+        checkBadPostRequest(
+                EventTestBuilder.defaultBuilder()
+                        .title("a".repeat(2))
+                        .buildEventDtoIn()
+        );
+    }
+
+    @Test
+    void post_whenDtoWithLongTitle_thenStatusBadRequest() throws Exception {
+        checkBadPostRequest(
+                EventTestBuilder.defaultBuilder()
+                        .title("a".repeat(121))
+                        .buildEventDtoIn()
+        );
+    }
+
+    @Test
     void post_whenServiceThrowsConditionsNotMetException_thenStatusConflict() throws Exception {
         doThrow(new ConditionsNotMetException("some message"))
                 .when(eventService).add(any(), any());
 
-        mvc.perform(post("/users/11/events")
-                        .characterEncoding(StandardCharsets.UTF_8)
-                        .contentType(MediaType.APPLICATION_JSON)
-                        .accept(MediaType.APPLICATION_JSON)
-                        .content(objectMapper.writeValueAsString(EventTestBuilder.defaultBuilder().buildEventDtoIn())))
+        performPostRequest(EventTestBuilder.defaultBuilder().buildEventDtoIn())
                 .andExpect(status().is(409))
                 .andExpect(jsonPath("$.status").value("FORBIDDEN"))
                 .andExpect(jsonPath("$.reason").isNotEmpty())
@@ -211,35 +329,27 @@ class EventControllerTest {
         when(eventService.patch(22L, 11L, eventDtoInPatch))
                 .thenReturn(eventDtoOut);
 
-        mvc.perform(patch("/users/11/events/22")
-                        .characterEncoding(StandardCharsets.UTF_8)
-                        .contentType(MediaType.APPLICATION_JSON)
-                        .accept(MediaType.APPLICATION_JSON)
-                        .content(objectMapper.writeValueAsString(eventDtoInPatch)))
+        performPatchRequest(eventDtoInPatch)
                 .andExpect(status().isOk())
                 .andExpect(content().json(objectMapper.writeValueAsString(eventDtoOut)));
     }
 
     @Test
     void patch_whenDtoWithNullFields_thenStatusOk() throws Exception {
-        mvc.perform(patch("/users/11/events/22")
-                        .characterEncoding(StandardCharsets.UTF_8)
-                        .contentType(MediaType.APPLICATION_JSON)
-                        .accept(MediaType.APPLICATION_JSON)
-                        .content(objectMapper.writeValueAsString(
-                                EventDtoInPatch.builder()
-                                        .annotation(null)
-                                        .category(null)
-                                        .description(null)
-                                        .eventDate(null)
-                                        .location(null)
-                                        .paid(null)
-                                        .participantLimit(null)
-                                        .requestModeration(null)
-                                        .stateAction(null)
-                                        .title(null)
-                                        .build()
-                        )))
+        performPatchRequest(
+                EventDtoInPatch.builder()
+                        .annotation(null)
+                        .category(null)
+                        .description(null)
+                        .eventDate(null)
+                        .location(null)
+                        .paid(null)
+                        .participantLimit(null)
+                        .requestModeration(null)
+                        .stateAction(null)
+                        .title(null)
+                        .build()
+        )
                 .andExpect(status().isOk());
     }
 
@@ -255,17 +365,71 @@ class EventControllerTest {
     }
 
     @Test
-    void patch_whenDtoWithBlankAnnotation_thenStatusBadRequest() throws Exception {
-        EventDtoInPatch eventDtoInPatch = EventTestBuilder.defaultBuilder()
-                .annotation("").buildEventDtoInPatch();
-        checkBadPatchRequest(eventDtoInPatch);
+    void patch_whenDtoWithNormalLengthAnnotation_thenStatusOk() throws Exception {
+        EventTestBuilder eventTestBuilder = EventTestBuilder.defaultBuilder();
+        EventDtoInPatch eventDtoInPatch = eventTestBuilder
+                .annotation("a".repeat(20))
+                .buildEventDtoInPatch();
+        performPatchRequest(eventDtoInPatch)
+                .andExpect(status().isOk());
+
+        eventDtoInPatch = eventTestBuilder
+                .annotation("a".repeat(2000))
+                .buildEventDtoInPatch();
+        performPatchRequest(eventDtoInPatch)
+                .andExpect(status().isOk());
     }
 
     @Test
-    void patch_whenDtoWithBlankDescription_thenStatusBadRequest() throws Exception {
-        EventDtoInPatch eventDtoInPatch = EventTestBuilder.defaultBuilder()
-                .description("").buildEventDtoInPatch();
-        checkBadPatchRequest(eventDtoInPatch);
+    void patch_whenDtoWithShortAnnotation_thenStatusBadRequest() throws Exception {
+        checkBadPatchRequest(
+                EventTestBuilder.defaultBuilder()
+                        .annotation("a".repeat(19))
+                        .buildEventDtoInPatch()
+        );
+    }
+
+    @Test
+    void patch_whenDtoWithLongAnnotation_thenStatusBadRequest() throws Exception {
+        checkBadPatchRequest(
+                EventTestBuilder.defaultBuilder()
+                        .annotation("a".repeat(2001))
+                        .buildEventDtoInPatch()
+        );
+    }
+
+    @Test
+    void patch_whenDtoWithNormalLengthDescription_thenStatusOk() throws Exception {
+        EventTestBuilder eventTestBuilder = EventTestBuilder.defaultBuilder();
+        EventDtoInPatch eventDtoInPatch = eventTestBuilder
+                .description("a".repeat(20))
+                .buildEventDtoInPatch();
+        performPatchRequest(eventDtoInPatch)
+                .andExpect(status().isOk());
+
+        eventDtoInPatch = eventTestBuilder
+                .description("a".repeat(7000))
+                .buildEventDtoInPatch();
+        performPatchRequest(eventDtoInPatch)
+                .andExpect(status().isOk());
+    }
+
+    @Test
+    void patch_whenDtoWithShortDescription_thenStatusBadRequest() throws Exception {
+        checkBadPatchRequest(
+                EventTestBuilder.defaultBuilder()
+                        .description("a".repeat(19))
+                        .buildEventDtoInPatch()
+        );
+    }
+
+    @Test
+    void patch_whenDtoWithLongDescription_thenStatusBadRequest() throws Exception {
+        checkBadPatchRequest(
+                EventTestBuilder.defaultBuilder()
+                        .description("a".repeat(7001))
+                        .buildEventDtoInPatch()
+        );
     }
 
     @Test
@@ -285,10 +449,37 @@ class EventControllerTest {
     }
 
     @Test
-    void patch_whenDtoWithBlankTitle_thenStatusBadRequest() throws Exception {
-        EventDtoInPatch eventDtoInPatch = EventTestBuilder.defaultBuilder()
-                .title("").buildEventDtoInPatch();
-        checkBadPatchRequest(eventDtoInPatch);
+    void patch_whenDtoWithNormalLengthTitle_thenStatusOk() throws Exception {
+        EventTestBuilder eventTestBuilder = EventTestBuilder.defaultBuilder();
+        EventDtoInPatch eventDtoInPatch = eventTestBuilder
+                .title("a".repeat(3))
+                .buildEventDtoInPatch();
+        performPatchRequest(eventDtoInPatch)
+                .andExpect(status().isOk());
+
+        eventDtoInPatch = eventTestBuilder
+                .title("a".repeat(120))
+                .buildEventDtoInPatch();
+        performPatchRequest(eventDtoInPatch)
+                .andExpect(status().isOk());
+    }
+
+    @Test
+    void patch_whenDtoWithShortTitle_thenStatusBadRequest() throws Exception {
+        checkBadPatchRequest(
+                EventTestBuilder.defaultBuilder()
+                        .title("a".repeat(2))
+                        .buildEventDtoInPatch()
+        );
+    }
+
+    @Test
+    void patch_whenDtoWithLongTitle_thenStatusBadRequest() throws Exception {
+        checkBadPatchRequest(
+                EventTestBuilder.defaultBuilder()
+                        .title("a".repeat(121))
+                        .buildEventDtoInPatch()
+        );
     }
 
 }

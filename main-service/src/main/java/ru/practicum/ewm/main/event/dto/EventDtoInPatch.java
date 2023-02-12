@@ -7,6 +7,7 @@ import lombok.extern.jackson.Jacksonized;
 import ru.practicum.ewm.main.util.validation.NullableNotBlank;
 
 import javax.validation.Valid;
+import javax.validation.constraints.Size;
 import java.time.LocalDateTime;
 
 @Value
@@ -15,11 +16,13 @@ import java.time.LocalDateTime;
 public class EventDtoInPatch {
 
     @NullableNotBlank
+    @Size(min = 20, max = 2000)
     String annotation;
 
     Long category;
 
     @NullableNotBlank
+    @Size(min = 20, max = 7000)
     String description;
 
     @JsonFormat(shape = JsonFormat.Shape.STRING, pattern = "yyyy-MM-dd HH:mm:ss")
@@ -37,5 +40,6 @@ public class EventDtoInPatch {
     EventStateAction stateAction;
 
     @NullableNotBlank
+    @Size(min = 3, max = 120)
     String title;
 }

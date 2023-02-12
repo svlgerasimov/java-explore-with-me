@@ -19,11 +19,11 @@ public class EventTestBuilder {
 
     private final static LocalDateTime now = LocalDateTime.now().with(ChronoField.MILLI_OF_SECOND, 0);
 
-    private String annotation = "Annotation 1";
+    private String annotation = "Normal length annotation 1";
     private CategoryTestBuilder categoryTestBuilder = CategoryTestBuilder.defaultBuilder();
     private Integer confirmedRequests = 10;
     private LocalDateTime createdOn = LocalDateTime.parse("2022-09-06T11:00:23");
-    private String description = "Description 1";
+    private String description = "Normal length Description 1";
     private LocalDateTime eventDate = now.plusYears(2);
     private Long id = 1L;
     private UserTestBuilder initiatorBuilder = UserTestBuilder.defaultBuilder();

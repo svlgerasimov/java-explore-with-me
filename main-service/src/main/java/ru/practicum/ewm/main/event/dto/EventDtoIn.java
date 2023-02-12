@@ -6,8 +6,8 @@ import lombok.Value;
 import lombok.extern.jackson.Jacksonized;
 
 import javax.validation.Valid;
-import javax.validation.constraints.NotBlank;
 import javax.validation.constraints.NotNull;
+import javax.validation.constraints.Size;
 import java.time.LocalDateTime;
 
 @Value
@@ -15,13 +15,15 @@ import java.time.LocalDateTime;
 @Jacksonized
 public class EventDtoIn {
 
-    @NotBlank
+    @NotNull
+    @Size(min = 20, max = 2000)
     String annotation;
 
     @NotNull
     Long category;
 
-    @NotBlank
+    @NotNull
+    @Size(min = 20, max = 7000)
     String description;
 
     @JsonFormat(shape = JsonFormat.Shape.STRING, pattern = "yyyy-MM-dd HH:mm:ss")
@@ -41,6 +43,7 @@ public class EventDtoIn {
     @Builder.Default
     Boolean requestModeration = true;
 
-    @NotBlank
+    @NotNull
+    @Size(min = 3, max = 120)
     String title;
 }
