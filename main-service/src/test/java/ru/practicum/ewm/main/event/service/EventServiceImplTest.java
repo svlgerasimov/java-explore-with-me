@@ -6,6 +6,7 @@ import org.mockito.InjectMocks;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.test.context.ActiveProfiles;
+import org.springframework.test.context.jdbc.Sql;
 
 import javax.persistence.EntityManager;
 
@@ -22,7 +23,11 @@ class EventServiceImplTest {
     private EntityManager em;
 
     @Test
+    @Sql(scripts = "/sql/clear-events.sql",
+            executionPhase = Sql.ExecutionPhase.AFTER_TEST_METHOD)
+    @Sql(scripts = "/sql/get-events-prepare.sql",
+            executionPhase = Sql.ExecutionPhase.BEFORE_TEST_METHOD)
     void findByEventIdAndInitiatorIdTest() {
-        eventService.findByEventIdAndInitiatorId(1L, 1L);
+        eventService.findByEventIdAndInitiatorId(1L, 3L);
     }
 }
