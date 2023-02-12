@@ -1,33 +1,29 @@
 package ru.practicum.ewm.main.event.testutil;
 
-import lombok.Getter;
-import lombok.NoArgsConstructor;
-import lombok.Setter;
+import lombok.*;
 import lombok.experimental.Accessors;
 import ru.practicum.ewm.main.category.testutil.CategoryTestBuilder;
 import ru.practicum.ewm.main.event.dto.*;
+import ru.practicum.ewm.main.event.model.EventEntity;
+import ru.practicum.ewm.main.event.model.LocationModel;
 import ru.practicum.ewm.main.user.testutil.UserTestBuilder;
 
 import java.time.LocalDateTime;
-import java.time.temporal.ChronoField;
 
 @NoArgsConstructor(staticName = "defaultBuilder")
 @Getter
 @Setter
 @Accessors(chain = true, fluent = true)
 public class EventTestBuilder {
-
-    private final static LocalDateTime now = LocalDateTime.now().with(ChronoField.MILLI_OF_SECOND, 0);
-
     private String annotation = "Normal length annotation 1";
     private CategoryTestBuilder categoryTestBuilder = CategoryTestBuilder.defaultBuilder();
     private Integer confirmedRequests = 10;
     private LocalDateTime createdOn = LocalDateTime.parse("2022-09-06T11:00:23");
     private String description = "Normal length Description 1";
-    private LocalDateTime eventDate = now.plusYears(2);
+    private LocalDateTime eventDate = LocalDateTime.parse("2032-09-06T11:00:23");
     private Long id = 1L;
     private UserTestBuilder initiatorBuilder = UserTestBuilder.defaultBuilder();
-    private LocationDto location = new LocationDto(51.51, 31.31);
+    private Location location = new Location();
     private Boolean paid = true;
     private Integer participantLimit = 11;
     private LocalDateTime publishedOn = LocalDateTime.parse("2022-09-07T15:10:05");
@@ -36,6 +32,14 @@ public class EventTestBuilder {
     private EventStateAction stateAction = EventStateAction.CANCEL_REVIEW;
     private String title = "Title 1";
     private Long views = 1001L;
+
+    @Data
+    @AllArgsConstructor
+    @NoArgsConstructor
+    public static class Location {
+        private Double lat = 51.51;
+        private Double lon = 31.31;
+    }
 
     public EventDtoOut buildEventDtoOut() {
         return EventDtoOut.builder()
@@ -51,7 +55,9 @@ public class EventTestBuilder {
                 .initiator(
                         initiatorBuilder == null ? null : initiatorBuilder.buildDtoOutShort()
                 )
-                .location(location)
+                .location(
+                        location == null ? null : new LocationDto(location.lat, location.lon)
+                )
                 .paid(paid)
                 .participantLimit(participantLimit)
                 .publishedOn(publishedOn)
@@ -88,7 +94,9 @@ public class EventTestBuilder {
                 )
                 .description(description)
                 .eventDate(eventDate)
-                .location(location)
+                .location(
+                        location == null ? null : new LocationDto(location.lat, location.lon)
+                )
                 .paid(paid)
                 .participantLimit(participantLimit)
                 .requestModeration(requestModeration)
@@ -104,12 +112,44 @@ public class EventTestBuilder {
                 )
                 .description(description)
                 .eventDate(eventDate)
-                .location(location)
+                .location(
+                        location == null ? null : new LocationDto(location.lat, location.lon)
+                )
                 .paid(paid)
                 .participantLimit(participantLimit)
                 .requestModeration(requestModeration)
                 .stateAction(stateAction)
                 .title(title)
                 .build();
+    }
+
+    public EventEntity buildEventEntity() {
+        EventEntity eventEntity = new EventEntity();
+        eventEntity.setId(id);
+        eventEntity.setAnnotation(annotation);
+        eventEntity.setCategory(
+                categoryTestBuilder == null ? null : categoryTestBuilder.buildCategoryEntity()
+        );
+        eventEntity.setDescription(description);
+        eventEntity.setEventDate(eventDate);
+        if (location == null) {
+            eventEntity.setLocation(null);
+        } else {
+            LocationModel locationModel = new LocationModel();
+            locationModel.setLatitude(location.lat);
+            locationModel.setLongitude(location.lon);
+            eventEntity.setLocation(locationModel);
+        }
+        eventEntity.setPaid(paid);
+        eventEntity.setParticipantLimit(participantLimit);
+        eventEntity.setRequestModeration(requestModeration);
+        eventEntity.setTitle(title);
+        eventEntity.setCreatedOn(createdOn);
+        eventEntity.setInitiator(
+                initiatorBuilder == null ? null : initiatorBuilder.buildUserEntity())
+        ;
+        eventEntity.setPublishedOn(publishedOn);
+        eventEntity.setState(state);
+        return eventEntity;
     }
 }

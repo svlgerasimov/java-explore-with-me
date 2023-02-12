@@ -188,17 +188,15 @@ class EventControllerTest {
     @Test
     void post_whenDtoWithNullLocationLat_thenStatusBadRequest() throws Exception {
         EventTestBuilder eventTestBuilder = EventTestBuilder.defaultBuilder();
-        LocationDto locationDto = eventTestBuilder.location();
-        locationDto = new LocationDto(null, locationDto.getLon());
-        checkBadPostRequest(eventTestBuilder.location(locationDto).buildEventDtoIn());
+        eventTestBuilder.location().lat(null);
+        checkBadPostRequest(eventTestBuilder.buildEventDtoIn());
     }
 
     @Test
     void post_whenDtoWithNullLocationLon_thenStatusBadRequest() throws Exception {
         EventTestBuilder eventTestBuilder = EventTestBuilder.defaultBuilder();
-        LocationDto locationDto = eventTestBuilder.location();
-        locationDto = new LocationDto(locationDto.getLat(), null);
-        checkBadPostRequest(eventTestBuilder.location(locationDto).buildEventDtoIn());
+        eventTestBuilder.location().lon(null);
+        checkBadPostRequest(eventTestBuilder.buildEventDtoIn());
     }
 
     @Test
@@ -435,7 +433,7 @@ class EventControllerTest {
     @Test
     void patch_whenDtoWithNullLocationLat_thenStatusBadRequest() throws Exception {
         EventDtoInPatch eventDtoInPatch = EventTestBuilder.defaultBuilder()
-                .location(new LocationDto(null, 31.31))
+                .location(new EventTestBuilder.Location(null, 31.31))
                 .buildEventDtoInPatch();
         checkBadPatchRequest(eventDtoInPatch);
     }
@@ -443,7 +441,7 @@ class EventControllerTest {
     @Test
     void patch_whenDtoWithNullLocationLon_thenStatusBadRequest() throws Exception {
         EventDtoInPatch eventDtoInPatch = EventTestBuilder.defaultBuilder()
-                .location(new LocationDto(51.51, null))
+                .location(new EventTestBuilder.Location(51.51, null))
                 .buildEventDtoInPatch();
         checkBadPatchRequest(eventDtoInPatch);
     }
