@@ -3,6 +3,7 @@ package ru.practicum.ewm.main.user.model;
 import org.junit.jupiter.api.Test;
 import ru.practicum.ewm.main.user.dto.UserDtoIn;
 import ru.practicum.ewm.main.user.dto.UserDtoOut;
+import ru.practicum.ewm.main.user.dto.UserDtoOutShort;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
@@ -42,5 +43,19 @@ class UserDtoMapperTest {
                         .name(name)
                         .build()
         );
+    }
+
+    @Test
+    void toDtoShortTest() {
+        UserEntity userEntity = new UserEntity();
+        userEntity.setId(1L);
+        userEntity.setEmail(email);
+        userEntity.setName(name);
+
+        UserDtoOutShort userDtoOutShort = mapper.toDtoShort(userEntity);
+
+        assertThat(userDtoOutShort)
+                .extracting("id", "name")
+                .containsExactly(1L, name);
     }
 }

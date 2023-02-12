@@ -5,7 +5,6 @@ import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.json.JsonTest;
 import org.springframework.boot.test.json.JacksonTester;
-import org.springframework.http.HttpStatus;
 
 import java.io.IOException;
 import java.time.LocalDateTime;
@@ -20,7 +19,7 @@ class ErrorDtoTest {
     private JacksonTester<ErrorDto> jacksonTester;
 
     private final ErrorDto errorDto = ErrorDto.builder()
-            .status(HttpStatus.BAD_REQUEST)
+            .status("BAD_REQUEST")
             .reason("Incorrectly made request.")
             .message("Failed to convert value of ")
             .timestamp(LocalDateTime.of(2022, 9, 7, 9, 10, 50))

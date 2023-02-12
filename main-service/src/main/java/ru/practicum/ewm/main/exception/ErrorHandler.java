@@ -24,8 +24,20 @@ public class ErrorHandler {
     public ErrorDto handleNotFoundException(NotFoundException e) {
         log.warn("Object not found", e);
         return ErrorDto.builder()
-                .status(HttpStatus.NOT_FOUND)
+                .status("NOT_FOUND")
                 .reason("The required object was not found.")
+                .message(e.getMessage())
+                .timestamp(LocalDateTime.now())
+                .build();
+    }
+
+    @ExceptionHandler
+    @ResponseStatus(HttpStatus.CONFLICT)
+    public ErrorDto handleConditionsNotMetException(ConditionsNotMetException e) {
+        log.warn("Conditions for requested operation not met", e);
+        return ErrorDto.builder()
+                .status("FORBIDDEN")
+                .reason("For the requested operation the conditions are not met.")
                 .message(e.getMessage())
                 .timestamp(LocalDateTime.now())
                 .build();
@@ -42,7 +54,7 @@ public class ErrorHandler {
     public ErrorDto handleInvalidRequestException(RuntimeException e) {
         log.warn("Parameter validation error", e);
         return ErrorDto.builder()
-                .status(HttpStatus.BAD_REQUEST)
+                .status("BAD_REQUEST")
                 .reason("Incorrectly made request.")
                 .message(e.getMessage())
                 .timestamp(LocalDateTime.now())
@@ -55,7 +67,7 @@ public class ErrorHandler {
     public ErrorDto handleMethodArgumentNotValidException(MethodArgumentNotValidException e) {
         log.warn("Object validation error", e);
         return ErrorDto.builder()
-                .status(HttpStatus.BAD_REQUEST)
+                .status("BAD_REQUEST")
                 .reason("Incorrectly made request.")
                 .message(e.getAllErrors().stream()
                         .map(objectError -> {
@@ -77,7 +89,7 @@ public class ErrorHandler {
     public ErrorDto handleDataIntegrityViolationException(DataIntegrityViolationException e) {
         log.warn("Db constraint violation", e);
         return ErrorDto.builder()
-                .status(HttpStatus.CONFLICT)
+                .status("CONFLICT")
                 .reason("Integrity constraint has been violated.")
                 .message(e.getMessage())
                 .timestamp(LocalDateTime.now())
@@ -89,7 +101,7 @@ public class ErrorHandler {
     public ErrorDto handleUnexpectedException(Throwable exception) {
         log.warn("Unexpected exception", exception);
         return ErrorDto.builder()
-                .status(HttpStatus.INTERNAL_SERVER_ERROR)
+                .status("INTERNAL_SERVER_ERROR")
                 .reason("Unexpected exception")
                 .message(exception.getMessage())
                 .timestamp(LocalDateTime.now())
