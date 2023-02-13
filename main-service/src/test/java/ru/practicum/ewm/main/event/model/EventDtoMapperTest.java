@@ -16,7 +16,6 @@ import java.util.Map;
 import static org.assertj.core.api.Assertions.assertThat;
 
 class EventDtoMapperTest {
-    
     private static final EventDtoMapper mapper = new EventDtoMapperImpl(
             new UserDtoMapperImpl(),
             new CategoryDtoMapperImpl(),
@@ -76,9 +75,9 @@ class EventDtoMapperTest {
 
         EventEntity eventEntity = eventTestBuilder.buildEventEntity();
 
-        EventDtoInPatch eventDtoInPatch = EventDtoInPatch.builder().build();
+        EventDtoInInitiatorPatch eventDtoInInitiatorPatch = EventDtoInInitiatorPatch.builder().build();
 
-        mapper.updateByDto(eventEntity, eventDtoInPatch, null);
+        mapper.updateByDto(eventEntity, eventDtoInInitiatorPatch, null);
 
         assertThat(eventEntity)
                 .usingRecursiveComparison()

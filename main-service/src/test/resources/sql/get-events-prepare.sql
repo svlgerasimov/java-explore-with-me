@@ -54,7 +54,22 @@ VALUES ( 1,
          TIMESTAMP '2020-01-29 00:00:02',
          4,
          TIMESTAMP '2020-01-30 00:00:02',
-         'PUBLISHED' );
+         'PUBLISHED' ),
+        ( 3,
+        'annotation 3',
+        3,
+        'description 3',
+        TIMESTAMP '2030-01-30 00:00:02',
+        25.754167,
+        27.62,
+        false,
+        7,
+        true,
+        'title 2',
+        TIMESTAMP '2020-01-29 00:00:02',
+        4,
+        TIMESTAMP '2020-01-30 00:00:02',
+        'PUBLISHED' );
 
 INSERT INTO requests (id, created, event_id, requester_id, status)
 VALUES ( 1,  TIMESTAMP '2021-01-30 00:00:00', 1, 3, 'CONFIRMED' ),

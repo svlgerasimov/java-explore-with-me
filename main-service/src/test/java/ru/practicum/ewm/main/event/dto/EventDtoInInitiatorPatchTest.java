@@ -11,12 +11,12 @@ import java.time.LocalDateTime;
 import static org.assertj.core.api.Assertions.assertThat;
 
 @JsonTest
-class EventDtoInPatchTest {
+class EventDtoInInitiatorPatchTest {
 
     @Autowired
-    private JacksonTester<EventDtoInPatch> jacksonTester;
+    private JacksonTester<EventDtoInInitiatorPatch> jacksonTester;
 
-    private final EventDtoInPatch eventDtoInPatch = EventDtoInPatch.builder()
+    private final EventDtoInInitiatorPatch eventDtoInInitiatorPatch = EventDtoInInitiatorPatch.builder()
             .annotation("Сап прогулки по рекам и каналам – это возможность увидеть Практикбург с другого ракурса")
             .category(3L)
             .description("От английского SUP - Stand Up Paddle — \"стоя на доске с веслом\", " +
@@ -35,7 +35,7 @@ class EventDtoInPatchTest {
 
     @Test
     void eventDtoInPatchSerializationTest() throws IOException {
-        assertThat(jacksonTester.write(eventDtoInPatch))
+        assertThat(jacksonTester.write(eventDtoInInitiatorPatch))
                 .isStrictlyEqualToJson("EventDtoInPatch.json");
     }
 
@@ -43,6 +43,6 @@ class EventDtoInPatchTest {
     void eventDtoInPatchDeserializationTest() throws IOException {
         assertThat(jacksonTester.read("EventDtoInPatch.json"))
                 .usingRecursiveComparison()
-                .isEqualTo(eventDtoInPatch);
+                .isEqualTo(eventDtoInInitiatorPatch);
     }
 }

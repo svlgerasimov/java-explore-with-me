@@ -1,9 +1,7 @@
 package ru.practicum.ewm.main.event.service;
 
-import ru.practicum.ewm.main.event.dto.EventDtoIn;
-import ru.practicum.ewm.main.event.dto.EventDtoInPatch;
-import ru.practicum.ewm.main.event.dto.EventDtoOut;
-import ru.practicum.ewm.main.event.dto.EventDtoOutShort;
+import org.springframework.transaction.annotation.Transactional;
+import ru.practicum.ewm.main.event.dto.*;
 
 import java.util.List;
 
@@ -14,5 +12,8 @@ public interface EventService {
 
     EventDtoOut findByEventIdAndInitiatorId(Long eventId, Long userId);
 
-    EventDtoOut patch(Long eventId, Long userId, EventDtoInPatch eventDtoInPatch);
+    EventDtoOut patchByInitiator(Long eventId, Long userId, EventDtoInInitiatorPatch eventDtoInInitiatorPatch);
+
+    @Transactional
+    EventDtoOut patchByAdmin(Long eventId, EventDtoInAdminPatch eventDtoInAdminPatch);
 }

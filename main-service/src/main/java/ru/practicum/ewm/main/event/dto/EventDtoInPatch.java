@@ -1,27 +1,24 @@
 package ru.practicum.ewm.main.event.dto;
 
 import com.fasterxml.jackson.annotation.JsonFormat;
-import lombok.Builder;
 import lombok.Value;
-import lombok.extern.jackson.Jacksonized;
-import ru.practicum.ewm.main.util.validation.NullableNotBlank;
+import lombok.experimental.NonFinal;
+import lombok.experimental.SuperBuilder;
 
 import javax.validation.Valid;
 import javax.validation.constraints.Size;
 import java.time.LocalDateTime;
 
 @Value
-@Builder
-@Jacksonized
+@NonFinal
+@SuperBuilder
 public class EventDtoInPatch {
 
-    @NullableNotBlank
     @Size(min = 20, max = 2000)
     String annotation;
 
     Long category;
 
-    @NullableNotBlank
     @Size(min = 20, max = 7000)
     String description;
 
@@ -37,9 +34,6 @@ public class EventDtoInPatch {
 
     Boolean requestModeration;
 
-    EventStateAction stateAction;
-
-    @NullableNotBlank
     @Size(min = 3, max = 120)
     String title;
 }

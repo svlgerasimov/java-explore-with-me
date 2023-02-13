@@ -3,10 +3,7 @@ package ru.practicum.ewm.main.event.model;
 import org.mapstruct.*;
 import ru.practicum.ewm.main.category.model.CategoryDtoMapper;
 import ru.practicum.ewm.main.category.model.CategoryEntity;
-import ru.practicum.ewm.main.event.dto.EventDtoIn;
-import ru.practicum.ewm.main.event.dto.EventDtoInPatch;
-import ru.practicum.ewm.main.event.dto.EventDtoOut;
-import ru.practicum.ewm.main.event.dto.EventDtoOutShort;
+import ru.practicum.ewm.main.event.dto.*;
 import ru.practicum.ewm.main.user.model.UserDtoMapper;
 import ru.practicum.ewm.main.user.model.UserEntity;
 

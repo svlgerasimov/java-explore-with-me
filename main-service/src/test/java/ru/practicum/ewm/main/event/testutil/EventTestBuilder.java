@@ -104,8 +104,8 @@ public class EventTestBuilder {
                 .build();
     }
 
-    public EventDtoInPatch buildEventDtoInPatch() {
-        return EventDtoInPatch.builder()
+    public EventDtoInInitiatorPatch buildEventDtoInPatch() {
+        return EventDtoInInitiatorPatch.builder()
                 .annotation(annotation)
                 .category(
                         categoryTestBuilder == null ? null : categoryTestBuilder.id()

@@ -45,12 +45,12 @@ class EventControllerTest {
                 .content(objectMapper.writeValueAsString(eventDtoIn)));
     }
 
-    private ResultActions performPatchRequest(EventDtoInPatch eventDtoInPatch) throws Exception {
+    private ResultActions performPatchRequest(EventDtoInInitiatorPatch eventDtoInInitiatorPatch) throws Exception {
         return mvc.perform(patch("/users/11/events/22")
                 .characterEncoding(StandardCharsets.UTF_8)
                 .contentType(MediaType.APPLICATION_JSON)
                 .accept(MediaType.APPLICATION_JSON)
-                .content(objectMapper.writeValueAsString(eventDtoInPatch)));
+                .content(objectMapper.writeValueAsString(eventDtoInInitiatorPatch)));
     }
 
     @Test
@@ -321,13 +321,13 @@ class EventControllerTest {
     @Test
     void patch_whenValidDto_thenStatusOkAndReturnDto() throws Exception {
         EventTestBuilder eventTestBuilder = EventTestBuilder.defaultBuilder();
-        EventDtoInPatch eventDtoInPatch = eventTestBuilder.buildEventDtoInPatch();
+        EventDtoInInitiatorPatch eventDtoInInitiatorPatch = eventTestBuilder.buildEventDtoInPatch();
         EventDtoOut eventDtoOut = eventTestBuilder.buildEventDtoOut();
 
-        when(eventService.patch(22L, 11L, eventDtoInPatch))
+        when(eventService.patchByInitiator(22L, 11L, eventDtoInInitiatorPatch))
                 .thenReturn(eventDtoOut);
 
-        performPatchRequest(eventDtoInPatch)
+        performPatchRequest(eventDtoInInitiatorPatch)
                 .andExpect(status().isOk())
                 .andExpect(content().json(objectMapper.writeValueAsString(eventDtoOut)));
     }
@@ -335,7 +335,7 @@ class EventControllerTest {
     @Test
     void patch_whenDtoWithNullFields_thenStatusOk() throws Exception {
         performPatchRequest(
-                EventDtoInPatch.builder()
+                EventDtoInInitiatorPatch.builder()
                         .annotation(null)
                         .category(null)
                         .description(null)
@@ -351,30 +351,30 @@ class EventControllerTest {
                 .andExpect(status().isOk());
     }
 
-    private void checkBadPatchRequest(EventDtoInPatch eventDtoInPatch) throws Exception {
+    private void checkBadPatchRequest(EventDtoInInitiatorPatch eventDtoInInitiatorPatch) throws Exception {
         checkBadRequest(
                 mvc,
                 patch("/users/11/events/22")
                         .characterEncoding(StandardCharsets.UTF_8)
                         .contentType(MediaType.APPLICATION_JSON)
                         .accept(MediaType.APPLICATION_JSON)
-                        .content(objectMapper.writeValueAsString(eventDtoInPatch))
+                        .content(objectMapper.writeValueAsString(eventDtoInInitiatorPatch))
         );
     }
 
     @Test
     void patch_whenDtoWithNormalLengthAnnotation_thenStatusOk() throws Exception {
         EventTestBuilder eventTestBuilder = EventTestBuilder.defaultBuilder();
-        EventDtoInPatch eventDtoInPatch = eventTestBuilder
+        EventDtoInInitiatorPatch eventDtoInInitiatorPatch = eventTestBuilder
                 .annotation("a".repeat(20))
                 .buildEventDtoInPatch();
-        performPatchRequest(eventDtoInPatch)
+        performPatchRequest(eventDtoInInitiatorPatch)
                 .andExpect(status().isOk());
 
-        eventDtoInPatch = eventTestBuilder
+        eventDtoInInitiatorPatch = eventTestBuilder
                 .annotation("a".repeat(2000))
                 .buildEventDtoInPatch();
-        performPatchRequest(eventDtoInPatch)
+        performPatchRequest(eventDtoInInitiatorPatch)
                 .andExpect(status().isOk());
     }
 
@@ -399,16 +399,16 @@ class EventControllerTest {
     @Test
     void patch_whenDtoWithNormalLengthDescription_thenStatusOk() throws Exception {
         EventTestBuilder eventTestBuilder = EventTestBuilder.defaultBuilder();
-        EventDtoInPatch eventDtoInPatch = eventTestBuilder
+        EventDtoInInitiatorPatch eventDtoInInitiatorPatch = eventTestBuilder
                 .description("a".repeat(20))
                 .buildEventDtoInPatch();
-        performPatchRequest(eventDtoInPatch)
+        performPatchRequest(eventDtoInInitiatorPatch)
                 .andExpect(status().isOk());
 
-        eventDtoInPatch = eventTestBuilder
+        eventDtoInInitiatorPatch = eventTestBuilder
                 .description("a".repeat(7000))
                 .buildEventDtoInPatch();
-        performPatchRequest(eventDtoInPatch)
+        performPatchRequest(eventDtoInInitiatorPatch)
                 .andExpect(status().isOk());
     }
 
@@ -432,33 +432,33 @@ class EventControllerTest {
 
     @Test
     void patch_whenDtoWithNullLocationLat_thenStatusBadRequest() throws Exception {
-        EventDtoInPatch eventDtoInPatch = EventTestBuilder.defaultBuilder()
+        EventDtoInInitiatorPatch eventDtoInInitiatorPatch = EventTestBuilder.defaultBuilder()
                 .location(new EventTestBuilder.Location(null, 31.31))
                 .buildEventDtoInPatch();
-        checkBadPatchRequest(eventDtoInPatch);
+        checkBadPatchRequest(eventDtoInInitiatorPatch);
     }
 
     @Test
     void patch_whenDtoWithNullLocationLon_thenStatusBadRequest() throws Exception {
-        EventDtoInPatch eventDtoInPatch = EventTestBuilder.defaultBuilder()
+        EventDtoInInitiatorPatch eventDtoInInitiatorPatch = EventTestBuilder.defaultBuilder()
                 .location(new EventTestBuilder.Location(51.51, null))
                 .buildEventDtoInPatch();
-        checkBadPatchRequest(eventDtoInPatch);
+        checkBadPatchRequest(eventDtoInInitiatorPatch);
     }
 
     @Test
     void patch_whenDtoWithNormalLengthTitle_thenStatusOk() throws Exception {
         EventTestBuilder eventTestBuilder = EventTestBuilder.defaultBuilder();
-        EventDtoInPatch eventDtoInPatch = eventTestBuilder
+        EventDtoInInitiatorPatch eventDtoInInitiatorPatch = eventTestBuilder
                 .title("a".repeat(3))
                 .buildEventDtoInPatch();
-        performPatchRequest(eventDtoInPatch)
+        performPatchRequest(eventDtoInInitiatorPatch)
                 .andExpect(status().isOk());
 
-        eventDtoInPatch = eventTestBuilder
+        eventDtoInInitiatorPatch = eventTestBuilder
                 .title("a".repeat(120))
                 .buildEventDtoInPatch();
-        performPatchRequest(eventDtoInPatch)
+        performPatchRequest(eventDtoInInitiatorPatch)
                 .andExpect(status().isOk());
     }
 

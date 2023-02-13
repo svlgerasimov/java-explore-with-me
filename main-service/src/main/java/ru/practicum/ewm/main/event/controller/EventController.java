@@ -5,10 +5,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
-import ru.practicum.ewm.main.event.dto.EventDtoIn;
-import ru.practicum.ewm.main.event.dto.EventDtoInPatch;
-import ru.practicum.ewm.main.event.dto.EventDtoOut;
-import ru.practicum.ewm.main.event.dto.EventDtoOutShort;
+import ru.practicum.ewm.main.event.dto.*;
 import ru.practicum.ewm.main.event.service.EventService;
 
 import javax.validation.Valid;
@@ -51,8 +48,17 @@ public class EventController {
     public EventDtoOut patch(
             @PathVariable Long eventId,
             @PathVariable Long userId,
-            @RequestBody @Valid EventDtoInPatch eventDtoInPatch) {
-        return eventService.patch(eventId, userId, eventDtoInPatch);
+            @RequestBody @Valid EventDtoInInitiatorPatch eventDtoInInitiatorPatch) {
+        return eventService.patchByInitiator(eventId, userId, eventDtoInInitiatorPatch);
+    }
+
+    // Admin API
+
+    @PatchMapping("/admin/events/{eventId}")
+    public EventDtoOut patch1(
+            @PathVariable Long eventId,
+            @RequestBody @Valid EventDtoInAdminPatch eventDtoInAdminPatch) {
+        return eventService.patchByAdmin(eventId, eventDtoInAdminPatch);
     }
 
 }
