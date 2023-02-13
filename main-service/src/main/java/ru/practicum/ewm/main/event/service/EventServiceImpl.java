@@ -18,6 +18,7 @@ import ru.practicum.ewm.main.exception.ConditionsNotMetException;
 import ru.practicum.ewm.main.exception.NotFoundException;
 import ru.practicum.ewm.main.user.model.UserEntity;
 import ru.practicum.ewm.main.user.repository.UserRepository;
+import ru.practicum.ewm.stats.client.StatClient;
 
 import java.time.LocalDateTime;
 import java.util.List;
@@ -32,7 +33,7 @@ public class EventServiceImpl implements EventService {
     private final UserRepository userRepository;
     private final CategoryRepository categoryRepository;
     private final EventDtoMapper eventDtoMapper;
-//    private final StatClient statClient;
+    private final StatClient statClient;
 
     @Override
     @Transactional
