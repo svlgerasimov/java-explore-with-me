@@ -78,7 +78,7 @@ public class EventServiceImpl implements EventService {
 //                false
 //        );
 //        log.debug(statDtoOuts.toString());
-        EventEntity eventEntity = findEventByIdAndInitiatorId(eventId, userId);
+        EventEntity eventEntity = findEventEntityByIdAndInitiatorId(eventId, userId);
         // TODO реализовать добавление количества просмотров и подтвержденных запросов
         return eventDtoMapper.toDtoFull(eventEntity, 0, 0L);
     }
@@ -92,7 +92,7 @@ public class EventServiceImpl implements EventService {
             checkEventDate(eventDate, LocalDateTime.now());
         }
 
-        EventEntity eventEntity = findEventByIdAndInitiatorId(eventId, userId);
+        EventEntity eventEntity = findEventEntityByIdAndInitiatorId(eventId, userId);
 
         EventState actualEventStat = eventEntity.getState();
         if (!EventState.PENDING.equals(actualEventStat) && !EventState.CANCELED.equals(actualEventStat)) {
@@ -180,7 +180,7 @@ public class EventServiceImpl implements EventService {
                 .orElseThrow(() -> new NotFoundException("Event with id=" + id + " was not found."));
     }
 
-    private EventEntity findEventByIdAndInitiatorId(Long eventId, Long userId) {
+    private EventEntity findEventEntityByIdAndInitiatorId(Long eventId, Long userId) {
         return eventRepository.findByIdAndInitiatorId(eventId, userId)
                 .orElseThrow(() -> new NotFoundException(
                         "Event with id=" + eventId + " and initiator id=" + userId + " was not found."));
