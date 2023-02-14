@@ -4,7 +4,7 @@ import lombok.Getter;
 import lombok.Setter;
 import lombok.ToString;
 import ru.practicum.ewm.main.event.model.EventEntity;
-import ru.practicum.ewm.main.request.dto.RequestState;
+import ru.practicum.ewm.main.request.dto.RequestStatus;
 import ru.practicum.ewm.main.user.model.UserEntity;
 
 import javax.persistence.*;
@@ -36,7 +36,8 @@ public class RequestEntity {
     private UserEntity requester;
 
     @Column(name = "status")
-    private RequestState status;
+    @Enumerated(value = EnumType.STRING)
+    private RequestStatus status;
 
     @Override
     public boolean equals(Object o) {

@@ -10,8 +10,8 @@ import ru.practicum.ewm.main.event.model.EventEntity;
 import ru.practicum.ewm.main.event.repository.EventRepository;
 import ru.practicum.ewm.main.exception.ConditionsNotMetException;
 import ru.practicum.ewm.main.exception.NotFoundException;
-import ru.practicum.ewm.main.request.dto.RequestDtoOut;
-import ru.practicum.ewm.main.request.dto.RequestState;
+import ru.practicum.ewm.main.exception.NotImplementedException;
+import ru.practicum.ewm.main.request.dto.*;
 import ru.practicum.ewm.main.request.model.RequestDtoMapper;
 import ru.practicum.ewm.main.request.model.RequestEntity;
 import ru.practicum.ewm.main.request.repository.RequestRepository;
@@ -19,6 +19,7 @@ import ru.practicum.ewm.main.user.model.UserEntity;
 import ru.practicum.ewm.main.user.repository.UserRepository;
 
 import java.time.LocalDateTime;
+import java.util.ArrayList;
 import java.util.List;
 
 @Service
@@ -38,7 +39,7 @@ public class RequestServiceImpl implements RequestService {
     public RequestDtoOut add(Long userId, Long eventId) {
         EventEntity eventEntity = findEventEntity(eventId);
 
-        Long eventInitiatorId = eventEntity.getId();
+        Long eventInitiatorId = eventEntity.getInitiator().getId();
         if (eventInitiatorId.equals(userId)) {
             throw new ConditionsNotMetException("Initiator of event can't request participation in it");
         }
@@ -50,7 +51,7 @@ public class RequestServiceImpl implements RequestService {
 
         int participantLimit = eventEntity.getParticipantLimit();
         if (participantLimit != 0) {
-            int curParticipants = requestRepository.countByEventIdAndStatus(eventId, RequestState.CONFIRMED);
+            int curParticipants = requestRepository.countByEventIdAndStatus(eventId, RequestStatus.CONFIRMED);
             if (curParticipants >= participantLimit) {
                 throw new ConditionsNotMetException("Limit of participants already reached.");
             }
@@ -64,10 +65,12 @@ public class RequestServiceImpl implements RequestService {
         requestEntity.setCreated(LocalDateTime.now());
 
         if (eventEntity.getRequestModeration()) {
-            requestEntity.setStatus(RequestState.PENDING);
+            requestEntity.setStatus(RequestStatus.PENDING);
         } else {
-            requestEntity.setStatus(RequestState.CONFIRMED);
+            requestEntity.setStatus(RequestStatus.CONFIRMED);
         }
+
+        requestEntity = requestRepository.save(requestEntity);
 
         RequestDtoOut requestDtoOut = requestDtoMapper.toDto(requestEntity);
         log.debug("Add request {}", requestDtoOut);
@@ -79,7 +82,7 @@ public class RequestServiceImpl implements RequestService {
     @Transactional
     public RequestDtoOut cancelRequest(Long userId, Long requestId) {
         RequestEntity requestEntity = findRequestEntityByIdAndRequesterId(requestId, userId);
-        requestEntity.setStatus(RequestState.CANCELED);
+        requestEntity.setStatus(RequestStatus.CANCELED);
         RequestDtoOut requestDtoOut = requestDtoMapper.toDto(requestEntity);
         log.debug("Request canceled by requester: " + requestDtoOut);
         return  requestDtoOut;
@@ -94,6 +97,58 @@ public class RequestServiceImpl implements RequestService {
     public List<RequestDtoOut> findAllByEvent(Long userId, Long eventId) {
         findEventEntityByIdAndInitiatorId(eventId, userId);
         return requestDtoMapper.toDto(requestRepository.findAllByEventId(eventId));
+    }
+
+    @Override
+    @Transactional
+    public RequestStatusUpdateDtoOut updateStatusByEventInitiator(Long initiatorId,
+                                                                  Long eventId,
+                                                                  RequestStatusUpdateDtoIn statusUpdateDto) {
+        EventEntity eventEntity = findEventEntityByIdAndInitiatorId(eventId, initiatorId);
+        List<Long> requestIds = statusUpdateDto.getRequestIds();
+        List<RequestEntity> requestEntities = requestRepository.findAllByIdIn(requestIds);
+        List<RequestEntity> confirmedRequests = new ArrayList<>();
+        List<RequestEntity> rejectedRequests = new ArrayList<>();
+        RequestStatusAction statusAction = statusUpdateDto.getStatus();
+        switch (statusAction) {
+            case CONFIRMED:
+                for (RequestEntity requestEntity : requestEntities) {
+                    RequestStatus requestStatus = requestEntity.getStatus();
+                    if (RequestStatus.PENDING.equals(requestStatus)) {
+                        confirmedRequests.add(requestEntity);
+                    } else if (!RequestStatus.CONFIRMED.equals(requestStatus)) {
+                        throw new ConditionsNotMetException(
+                                "Request with id=" + requestEntity.getId() + ": request must be in pending state.");
+                    }
+                }
+                int curParticipants = requestRepository.countByEventIdAndStatus(eventId, RequestStatus.CONFIRMED);
+                int participantsLimit = eventEntity.getParticipantLimit();
+                if (participantsLimit != 0 && participantsLimit < curParticipants + confirmedRequests.size()) {
+                    throw new ConditionsNotMetException("Confirming requests would exceed participants limit.");
+                }
+                confirmedRequests.forEach(
+                        requestEntity -> requestEntity.setStatus(RequestStatus.CONFIRMED)
+                );
+                if (curParticipants + confirmedRequests.size() >= participantsLimit) {
+                    requestRepository.replaceStatus(RequestStatus.PENDING, RequestStatus.REJECTED);
+                }
+                break;
+            case REJECTED:
+                for (RequestEntity requestEntity : requestEntities) {
+                    RequestStatus requestStatus = requestEntity.getStatus();
+                    if (RequestStatus.PENDING.equals(requestStatus)) {
+                        requestEntity.setStatus(RequestStatus.REJECTED);
+                        rejectedRequests.add(requestEntity);
+                    } else if (!RequestStatus.REJECTED.equals(requestStatus)) {
+                        throw new ConditionsNotMetException(
+                                "Request with id=" + requestEntity.getId() + ": request must be in pending state.");
+                    }
+                }
+                break;
+            default:
+                throw new NotImplementedException("Set request status to " + statusAction + " is not implemented.");
+        }
+        return requestDtoMapper.toUpdateDto(confirmedRequests, rejectedRequests);
     }
 
     private RequestEntity findRequestEntity(Long id) {

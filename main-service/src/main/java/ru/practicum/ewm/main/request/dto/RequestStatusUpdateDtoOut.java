@@ -9,9 +9,9 @@ import java.util.List;
 @Value
 @Builder
 @Jacksonized
-public class RequestStatusUpdateDto {
+public class RequestStatusUpdateDtoOut {
 
-    List<Long> requestIds;
+    List<RequestDtoOut> confirmedRequests;
 
-    RequestState status;
+    List<RequestDtoOut> rejectedRequests;
 }

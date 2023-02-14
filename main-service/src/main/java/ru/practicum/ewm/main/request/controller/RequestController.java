@@ -5,8 +5,11 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.web.bind.annotation.*;
 import ru.practicum.ewm.main.request.dto.RequestDtoOut;
+import ru.practicum.ewm.main.request.dto.RequestStatusUpdateDtoIn;
+import ru.practicum.ewm.main.request.dto.RequestStatusUpdateDtoOut;
 import ru.practicum.ewm.main.request.service.RequestService;
 
+import javax.validation.Valid;
 import java.util.List;
 
 @RestController
@@ -39,5 +42,13 @@ public class RequestController {
     public List<RequestDtoOut> findAllByEvent(@PathVariable Long userId,
                                               @PathVariable Long eventId) {
         return requestService.findAllByEvent(userId, eventId);
+    }
+
+    @PatchMapping("/users/{userId}/events/{eventId}/requests")
+    public RequestStatusUpdateDtoOut updateStatusByEventInitiator(
+            @PathVariable Long userId,
+            @PathVariable Long eventId,
+            @RequestBody @Valid RequestStatusUpdateDtoIn requestStatusUpdateDtoIn) {
+        return requestService.updateStatusByEventInitiator(userId, eventId, requestStatusUpdateDtoIn);
     }
 }

@@ -21,5 +21,5 @@ public class RequestDtoOut {
 
     Long requester;
 
-    RequestState status;
+    RequestStatus status;
 }

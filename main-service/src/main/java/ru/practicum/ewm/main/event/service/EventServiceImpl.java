@@ -1,5 +1,6 @@
 package ru.practicum.ewm.main.event.service;
 
+import com.querydsl.core.types.dsl.BooleanExpression;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -12,10 +13,13 @@ import ru.practicum.ewm.main.category.repository.CategoryRepository;
 import ru.practicum.ewm.main.event.dto.*;
 import ru.practicum.ewm.main.event.model.EventDtoMapper;
 import ru.practicum.ewm.main.event.model.EventEntity;
+import ru.practicum.ewm.main.event.model.QEventEntity;
 import ru.practicum.ewm.main.event.repository.EventRepository;
 import ru.practicum.ewm.main.exception.ConditionsNotMetException;
 import ru.practicum.ewm.main.exception.NotFoundException;
 import ru.practicum.ewm.main.exception.NotImplementedException;
+import ru.practicum.ewm.main.request.dto.RequestStatus;
+import ru.practicum.ewm.main.request.repository.RequestRepository;
 import ru.practicum.ewm.main.user.model.UserEntity;
 import ru.practicum.ewm.main.user.repository.UserRepository;
 import ru.practicum.ewm.stats.client.StatClient;
@@ -24,6 +28,7 @@ import ru.practicum.ewm.stats.dto.StatDtoIn;
 import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Map;
+import java.util.stream.Collectors;
 
 @Service
 @RequiredArgsConstructor(onConstructor = @__(@Autowired))
@@ -34,6 +39,7 @@ public class EventServiceImpl implements EventService {
     private final EventRepository eventRepository;
     private final UserRepository userRepository;
     private final CategoryRepository categoryRepository;
+    private final RequestRepository requestRepository;
     private final EventDtoMapper eventDtoMapper;
     private final StatClient statClient;
 
@@ -57,10 +63,20 @@ public class EventServiceImpl implements EventService {
     public List<EventDtoOutShort> findAllByInitiatorId(Long userId, Integer from, Integer size) {
         Pageable pageable = PageRequest.of(from / size, size);
         List<EventEntity> eventEntities = eventRepository.findAllByInitiatorId(userId, pageable);
-        // TODO реализовать добавление количества просмотров и подтверждённых запросов
+
+        List<Long> eventIds = eventEntities.stream().map(EventEntity::getId).collect(Collectors.toList());
+        List<RequestRepository.CountById> requestsCount =
+                requestRepository.countByEventIdInAndStatus(eventIds, RequestStatus.CONFIRMED);
+        requestsCount.forEach(countById -> log.debug("(" + countById.getId() + ", " + countById.getCount() + ")"));
+        Map<Long, Integer> requestCountsByEventId = requestsCount.stream()
+                .collect(Collectors.toMap(
+                        RequestRepository.CountById::getId,
+                        RequestRepository.CountById::getCount
+                ));
+        // TODO реализовать добавление количества просмотров
 
         log.debug(eventEntities.toString());
-        return eventDtoMapper.toDtoShort(eventEntities, Map.of(), Map.of());
+        return eventDtoMapper.toDtoShort(eventEntities, requestCountsByEventId, Map.of());
     }
 
     @Override
@@ -79,8 +95,9 @@ public class EventServiceImpl implements EventService {
 //        );
 //        log.debug(statDtoOuts.toString());
         EventEntity eventEntity = findEventEntityByIdAndInitiatorId(eventId, userId);
-        // TODO реализовать добавление количества просмотров и подтвержденных запросов
-        return eventDtoMapper.toDtoFull(eventEntity, 0, 0L);
+        int confirmedRequests = requestRepository.countByEventIdAndStatus(eventId, RequestStatus.CONFIRMED);
+        // TODO реализовать добавление количества просмотров
+        return eventDtoMapper.toDtoFull(eventEntity, confirmedRequests, 0L);
     }
 
     @Override
@@ -112,6 +129,7 @@ public class EventServiceImpl implements EventService {
                     if (!EventState.PENDING.equals(eventEntity.getState())) {
                         throw new ConditionsNotMetException("Review can be cancelled only for pending events.");
                     }
+                    eventEntity.setState(EventState.CANCELED);
                     break;
                 default:
                     throw new NotImplementedException("Action " + requiredAction + " is not implemented.");
@@ -145,6 +163,7 @@ public class EventServiceImpl implements EventService {
         switch (requiredAction) {
             case PUBLISH_EVENT:
                 eventEntity.setState(EventState.PUBLISHED);
+                eventEntity.setPublishedOn(LocalDateTime.now());
                 break;
             case REJECT_EVENT:
                 eventEntity.setState(EventState.CANCELED);
@@ -156,6 +175,28 @@ public class EventServiceImpl implements EventService {
         EventDtoOut eventDtoOut = returnPatchedEventDto(eventDtoInAdminPatch, eventEntity);
         log.debug("Patch event {} by admin", eventDtoOut);
         return eventDtoOut;
+    }
+
+    @Override
+    public List<EventDtoOut> findByFiltersAdmin(List<Long> users,
+                                                List<EventState> states,
+                                                List<Long> categories,
+                                                LocalDateTime rangeStart,
+                                                LocalDateTime rangeEnd,
+                                                Integer from,
+                                                Integer size) {
+        // TODO реализовать добавление количества просмотров и подтверждённых запросов
+
+        BooleanExpression initiatorsExpression = QEventEntity.eventEntity.initiator.id.in(users);
+        BooleanExpression statesExpression = QEventEntity.eventEntity.state.in(states);
+        BooleanExpression categoriesExpression = QEventEntity.eventEntity.category.id.in(categories);
+
+//        return eventDtoMapper.toDtoFull(
+//                eventRepository.findByFiltersAdmin(users, states, categories, rangeStart, rangeEnd, from, size),
+//                Map.of(),
+//                Map.of()
+//        );
+        return null;
     }
 
     private EventDtoOut returnPatchedEventDto(EventDtoInPatch eventDtoInPatch, EventEntity eventEntity) {

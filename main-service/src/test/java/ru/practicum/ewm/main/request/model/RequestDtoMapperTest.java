@@ -5,7 +5,7 @@ import org.assertj.core.groups.Tuple;
 import org.junit.jupiter.api.Test;
 import ru.practicum.ewm.main.event.testutil.EventTestBuilder;
 import ru.practicum.ewm.main.request.dto.RequestDtoOut;
-import ru.practicum.ewm.main.request.dto.RequestState;
+import ru.practicum.ewm.main.request.dto.RequestStatus;
 import ru.practicum.ewm.main.user.testutil.UserTestBuilder;
 
 import java.time.LocalDateTime;
@@ -25,13 +25,13 @@ class RequestDtoMapperTest {
         requestEntity.setEvent(EventTestBuilder.defaultBuilder().id(3L).buildEventEntity());
         LocalDateTime created = LocalDateTime.of(2020, 1, 1, 0, 0, 0);
         requestEntity.setCreated(created);
-        requestEntity.setStatus(RequestState.PENDING);
+        requestEntity.setStatus(RequestStatus.PENDING);
 
         RequestDtoOut requestDtoOut = mapper.toDto(requestEntity);
 
         assertThat(requestDtoOut)
                 .extracting("id", "requester", "event", "created", "status")
-                .containsExactly(1L, 2L, 3L, created, RequestState.PENDING);
+                .containsExactly(1L, 2L, 3L, created, RequestStatus.PENDING);
     }
 
     @Test
@@ -44,7 +44,7 @@ class RequestDtoMapperTest {
         requestEntity.setEvent(EventTestBuilder.defaultBuilder().id(3L).buildEventEntity());
         LocalDateTime created1 = LocalDateTime.of(2020, 1, 1, 0, 0, 0);
         requestEntity.setCreated(created1);
-        requestEntity.setStatus(RequestState.PENDING);
+        requestEntity.setStatus(RequestStatus.PENDING);
 
         requestEntity = requestEntities.get(1);
         requestEntity.setId(11L);
@@ -52,13 +52,13 @@ class RequestDtoMapperTest {
         requestEntity.setEvent(EventTestBuilder.defaultBuilder().id(13L).buildEventEntity());
         LocalDateTime created2 = LocalDateTime.of(2021, 1, 1, 0, 0, 0);
         requestEntity.setCreated(created2);
-        requestEntity.setStatus(RequestState.CONFIRMED);
+        requestEntity.setStatus(RequestStatus.CONFIRMED);
 
         assertThat(mapper.toDto(requestEntities))
                 .extracting("id", "requester", "event", "created", "status")
                 .containsExactly(
-                        Tuple.tuple(1L, 2L, 3L, created1, RequestState.PENDING),
-                        Tuple.tuple(11L, 12L, 13L, created2, RequestState.CONFIRMED)
+                        Tuple.tuple(1L, 2L, 3L, created1, RequestStatus.PENDING),
+                        Tuple.tuple(11L, 12L, 13L, created2, RequestStatus.CONFIRMED)
                 );
     }
 }

@@ -98,7 +98,7 @@ class CategoryControllerTest {
     }
 
     @Test
-    void patch_whenDtoWithAbsentName_thenStatusOk() throws Exception {
+    void patch_whenDtoWithAbsentName_thenStatusBadRequest() throws Exception {
         CategoryDtoInPatch categoryDtoInPatch = CategoryDtoInPatch.builder().name(null).build();
 
         mvc.perform(patch("/admin/categories/2")
@@ -106,7 +106,7 @@ class CategoryControllerTest {
                         .contentType(MediaType.APPLICATION_JSON)
                         .accept(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(categoryDtoInPatch)))
-                .andExpect(status().isOk());
+                .andExpect(status().isBadRequest());
     }
 
     @Test

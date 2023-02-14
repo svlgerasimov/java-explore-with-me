@@ -6,6 +6,8 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.converter.HttpMessageNotReadableException;
 import org.springframework.validation.FieldError;
 import org.springframework.web.bind.MethodArgumentNotValidException;
+import org.springframework.web.bind.MissingRequestValueException;
+import org.springframework.web.bind.MissingServletRequestParameterException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.ResponseStatus;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
@@ -53,6 +55,18 @@ public class ErrorHandler {
     @ResponseStatus(HttpStatus.BAD_REQUEST)
     public ErrorDto handleInvalidRequestException(RuntimeException e) {
         log.warn("Parameter validation error", e);
+        return ErrorDto.builder()
+                .status("BAD_REQUEST")
+                .reason("Incorrectly made request.")
+                .message(e.getMessage())
+                .timestamp(LocalDateTime.now())
+                .build();
+    }
+
+    @ExceptionHandler
+    @ResponseStatus(HttpStatus.BAD_REQUEST)
+    public ErrorDto handleMissingServletRequestParameterException(MissingServletRequestParameterException e) {
+        log.warn("Missing required parameter", e);
         return ErrorDto.builder()
                 .status("BAD_REQUEST")
                 .reason("Incorrectly made request.")

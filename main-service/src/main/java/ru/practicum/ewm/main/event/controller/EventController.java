@@ -1,7 +1,9 @@
 package ru.practicum.ewm.main.event.controller;
 
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.format.annotation.DateTimeFormat;
 import org.springframework.http.HttpStatus;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
@@ -11,6 +13,7 @@ import ru.practicum.ewm.main.event.service.EventService;
 import javax.validation.Valid;
 import javax.validation.constraints.Positive;
 import javax.validation.constraints.PositiveOrZero;
+import java.time.LocalDateTime;
 import java.util.List;
 
 @RestController
@@ -59,6 +62,18 @@ public class EventController {
             @PathVariable Long eventId,
             @RequestBody @Valid EventDtoInAdminPatch eventDtoInAdminPatch) {
         return eventService.patchByAdmin(eventId, eventDtoInAdminPatch);
+    }
+
+    @GetMapping("/admin/events")
+    public List<EventDtoOut> findByFiltersAdmin(
+            @RequestParam List<Long> users,
+            @RequestParam List<EventState> states,
+            @RequestParam List<Long> categories,
+            @RequestParam @DateTimeFormat(pattern = "yyyy-MM-dd HH:mm:ss") LocalDateTime rangeStart,
+            @RequestParam @DateTimeFormat(pattern = "yyyy-MM-dd HH:mm:ss") LocalDateTime rangeEnd,
+            @RequestParam(defaultValue = "0") @PositiveOrZero Integer from,
+            @RequestParam(defaultValue = "10") @Positive Integer size) {
+        return eventService.findByFiltersAdmin(users, states, categories, rangeStart, rangeEnd, from, size);
     }
 
 }

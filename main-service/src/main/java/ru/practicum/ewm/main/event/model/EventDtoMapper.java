@@ -42,6 +42,22 @@ public interface EventDtoMapper {
 
     EventDtoOut toDtoFull(EventEntity eventEntity, Integer confirmedRequests, Long views);
 
+    @Named("toDtoFull")
+    default List<EventDtoOut> toDtoFull(List<EventEntity> eventEntities,
+                                              Map<Long, Integer> confirmedRequestsByEventId,
+                                              Map<Long, Long> viewsByEventId) {
+        return eventEntities.stream()
+                .map(eventEntity -> {
+                    Long eventId = eventEntity.getId();
+                    Integer confirmedRequests = confirmedRequestsByEventId.get(eventId);
+                    Long views = viewsByEventId.get(eventId);
+                    return toDtoFull(eventEntity,
+                            confirmedRequests == null ? 0 : confirmedRequests,
+                            views == null ? 0 : views);
+                })
+                .collect(Collectors.toList());
+    }
+
     EventDtoOutShort toDtoShort(EventEntity eventEntity, Integer confirmedRequests, Long views);
 
     @Named("toDtoShort")

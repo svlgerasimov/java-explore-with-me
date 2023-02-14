@@ -22,7 +22,7 @@ class RequestDtoOutTest {
             .event(1L)
             .id(3L)
             .requester(2L)
-            .status(RequestState.PENDING)
+            .status(RequestStatus.PENDING)
             .build();
 
     @Test
