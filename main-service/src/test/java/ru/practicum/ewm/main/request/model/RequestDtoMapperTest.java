@@ -1,6 +1,7 @@
 package ru.practicum.ewm.main.request.model;
 
 
+import org.assertj.core.groups.Tuple;
 import org.junit.jupiter.api.Test;
 import ru.practicum.ewm.main.event.testutil.EventTestBuilder;
 import ru.practicum.ewm.main.request.dto.RequestDtoOut;
@@ -8,6 +9,7 @@ import ru.practicum.ewm.main.request.dto.RequestState;
 import ru.practicum.ewm.main.user.testutil.UserTestBuilder;
 
 import java.time.LocalDateTime;
+import java.util.List;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
@@ -32,4 +34,31 @@ class RequestDtoMapperTest {
                 .containsExactly(1L, 2L, 3L, created, RequestState.PENDING);
     }
 
+    @Test
+    void toDtoListTest() {
+        List<RequestEntity> requestEntities = List.of(new RequestEntity(), new RequestEntity());
+
+        RequestEntity requestEntity = requestEntities.get(0);
+        requestEntity.setId(1L);
+        requestEntity.setRequester(UserTestBuilder.defaultBuilder().id(2L).buildUserEntity());
+        requestEntity.setEvent(EventTestBuilder.defaultBuilder().id(3L).buildEventEntity());
+        LocalDateTime created1 = LocalDateTime.of(2020, 1, 1, 0, 0, 0);
+        requestEntity.setCreated(created1);
+        requestEntity.setStatus(RequestState.PENDING);
+
+        requestEntity = requestEntities.get(1);
+        requestEntity.setId(11L);
+        requestEntity.setRequester(UserTestBuilder.defaultBuilder().id(12L).buildUserEntity());
+        requestEntity.setEvent(EventTestBuilder.defaultBuilder().id(13L).buildEventEntity());
+        LocalDateTime created2 = LocalDateTime.of(2021, 1, 1, 0, 0, 0);
+        requestEntity.setCreated(created2);
+        requestEntity.setStatus(RequestState.CONFIRMED);
+
+        assertThat(mapper.toDto(requestEntities))
+                .extracting("id", "requester", "event", "created", "status")
+                .containsExactly(
+                        Tuple.tuple(1L, 2L, 3L, created1, RequestState.PENDING),
+                        Tuple.tuple(11L, 12L, 13L, created2, RequestState.CONFIRMED)
+                );
+    }
 }

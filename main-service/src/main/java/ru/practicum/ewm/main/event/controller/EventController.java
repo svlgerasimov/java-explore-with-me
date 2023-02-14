@@ -45,7 +45,7 @@ public class EventController {
     }
 
     @PatchMapping("/users/{userId}/events/{eventId}")
-    public EventDtoOut patch(
+    public EventDtoOut patchByInitiator(
             @PathVariable Long eventId,
             @PathVariable Long userId,
             @RequestBody @Valid EventDtoInInitiatorPatch eventDtoInInitiatorPatch) {
@@ -55,7 +55,7 @@ public class EventController {
     // Admin API
 
     @PatchMapping("/admin/events/{eventId}")
-    public EventDtoOut patch1(
+    public EventDtoOut patchByAdmin(
             @PathVariable Long eventId,
             @RequestBody @Valid EventDtoInAdminPatch eventDtoInAdminPatch) {
         return eventService.patchByAdmin(eventId, eventDtoInAdminPatch);

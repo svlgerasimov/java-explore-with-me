@@ -19,6 +19,7 @@ import ru.practicum.ewm.main.user.model.UserEntity;
 import ru.practicum.ewm.main.user.repository.UserRepository;
 
 import java.time.LocalDateTime;
+import java.util.List;
 
 @Service
 @RequiredArgsConstructor(onConstructor = @__(@Autowired))
@@ -84,6 +85,17 @@ public class RequestServiceImpl implements RequestService {
         return  requestDtoOut;
     }
 
+    @Override
+    public List<RequestDtoOut> findAllByRequesterId(Long requesterId) {
+        return requestDtoMapper.toDto(requestRepository.findAllByRequesterId(requesterId));
+    }
+
+    @Override
+    public List<RequestDtoOut> findAllByEvent(Long userId, Long eventId) {
+        findEventEntityByIdAndInitiatorId(eventId, userId);
+        return requestDtoMapper.toDto(requestRepository.findAllByEventId(eventId));
+    }
+
     private RequestEntity findRequestEntity(Long id) {
         return requestRepository.findById(id)
                 .orElseThrow(() -> new NotFoundException("Request with id=" + id + " was not found."));
@@ -106,4 +118,9 @@ public class RequestServiceImpl implements RequestService {
                 .orElseThrow(() -> new NotFoundException("Event with id=" + id + " was not found."));
     }
 
+    private EventEntity findEventEntityByIdAndInitiatorId(Long eventId, Long userId) {
+        return eventRepository.findByIdAndInitiatorId(eventId, userId)
+                .orElseThrow(() -> new NotFoundException(
+                        "Event with id=" + eventId + " and initiator id=" + userId + " was not found."));
+    }
 }
