@@ -1,6 +1,7 @@
 package ru.practicum.ewm.main.event.service;
 
 import com.querydsl.core.types.dsl.BooleanExpression;
+import com.querydsl.core.types.dsl.Expressions;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -8,6 +9,7 @@ import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.web.reactive.function.client.WebClientException;
 import ru.practicum.ewm.main.category.model.CategoryEntity;
 import ru.practicum.ewm.main.category.repository.CategoryRepository;
 import ru.practicum.ewm.main.event.dto.*;
@@ -24,11 +26,14 @@ import ru.practicum.ewm.main.user.model.UserEntity;
 import ru.practicum.ewm.main.user.repository.UserRepository;
 import ru.practicum.ewm.stats.client.StatClient;
 import ru.practicum.ewm.stats.dto.StatDtoIn;
+import ru.practicum.ewm.stats.dto.StatDtoOut;
 
+import javax.servlet.http.HttpServletRequest;
 import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
+import java.util.stream.StreamSupport;
 
 @Service
 @RequiredArgsConstructor(onConstructor = @__(@Autowired))
@@ -64,15 +69,7 @@ public class EventServiceImpl implements EventService {
         Pageable pageable = PageRequest.of(from / size, size);
         List<EventEntity> eventEntities = eventRepository.findAllByInitiatorId(userId, pageable);
 
-        List<Long> eventIds = eventEntities.stream().map(EventEntity::getId).collect(Collectors.toList());
-        List<RequestRepository.CountById> requestsCount =
-                requestRepository.countByEventIdInAndStatus(eventIds, RequestStatus.CONFIRMED);
-        requestsCount.forEach(countById -> log.debug("(" + countById.getId() + ", " + countById.getCount() + ")"));
-        Map<Long, Integer> requestCountsByEventId = requestsCount.stream()
-                .collect(Collectors.toMap(
-                        RequestRepository.CountById::getId,
-                        RequestRepository.CountById::getCount
-                ));
+        Map<Long, Integer> requestCountsByEventId = findConfirmedRequestsCountsByEventId(eventEntities);
         // TODO реализовать добавление количества просмотров
 
         log.debug(eventEntities.toString());
@@ -185,18 +182,96 @@ public class EventServiceImpl implements EventService {
                                                 LocalDateTime rangeEnd,
                                                 Integer from,
                                                 Integer size) {
-        // TODO реализовать добавление количества просмотров и подтверждённых запросов
 
-        BooleanExpression initiatorsExpression = QEventEntity.eventEntity.initiator.id.in(users);
-        BooleanExpression statesExpression = QEventEntity.eventEntity.state.in(states);
-        BooleanExpression categoriesExpression = QEventEntity.eventEntity.category.id.in(categories);
+        BooleanExpression filtersExpression = Expressions.asBoolean(true);
+        if (users != null) {
+            filtersExpression = filtersExpression.and(QEventEntity.eventEntity.initiator.id.in(users));
+        }
+        if (states != null) {
+            filtersExpression = filtersExpression.and(QEventEntity.eventEntity.state.in(states));
+        }
+        if (categories != null) {
+            filtersExpression = filtersExpression.and(QEventEntity.eventEntity.category.id.in(categories));
+        }
+        if (rangeStart != null) {
+            filtersExpression = filtersExpression.and(QEventEntity.eventEntity.eventDate.after(rangeStart));
+        }
+        if (rangeEnd != null) {
+            filtersExpression = filtersExpression.and(QEventEntity.eventEntity.eventDate.before(rangeEnd));
+        }
 
-//        return eventDtoMapper.toDtoFull(
-//                eventRepository.findByFiltersAdmin(users, states, categories, rangeStart, rangeEnd, from, size),
-//                Map.of(),
-//                Map.of()
-//        );
-        return null;
+        Iterable<EventEntity> eventsIterable = eventRepository.findAll(filtersExpression);
+        List<EventEntity> eventEntities =
+                StreamSupport.stream(eventsIterable.spliterator(), false)
+                        .collect(Collectors.toList());
+
+        Map<Long, Integer> requestCountsByEventId = findConfirmedRequestsCountsByEventId(eventEntities);
+        // TODO реализовать добавление количества просмотров
+
+        return eventDtoMapper.toDtoFull(
+                eventEntities,
+                requestCountsByEventId,
+                Map.of()
+        );
+    }
+
+    @Override
+    public EventDtoOut findPublishedEventById(Long eventId, HttpServletRequest httpServletRequest) {
+        EventEntity eventEntity = eventRepository.findByIdAndState(eventId, EventState.PUBLISHED)
+                .orElseThrow(() -> new NotFoundException("Published event with id=" + eventId + " was not found"));
+        int confirmedRequests = requestRepository.countByEventIdAndStatus(eventId, RequestStatus.CONFIRMED);
+        // TODO реализовать добавление количества просмотров
+
+        hitToStatistics(httpServletRequest);
+
+        return eventDtoMapper.toDtoFull(eventEntity, confirmedRequests, 0L);
+    }
+
+    private void hitToStatistics(HttpServletRequest httpServletRequest) {
+        try {
+            statClient.saveHit(
+                    StatDtoIn.builder()
+                            .app("ewm-main")
+                            .uri(httpServletRequest.getRequestURI())
+                            .ip(httpServletRequest.getRemoteAddr())
+                            .timestamp(LocalDateTime.now())
+                            .build()
+            );
+        } catch (WebClientException e) {
+            log.warn("Save endpoint hit by statistics client was not successful.", e);
+        } catch (Throwable e) {
+            log.warn("Unexpected error while saving endpoint by statistics client.", e);
+        }
+    }
+
+    private Long getViewsCountFromStatistics(Long eventId, boolean unique) {
+        String uri = "/events/" + eventId;
+        List<StatDtoOut> stats;
+        try {
+            stats = statClient.getStats(null, null, List.of(uri), unique);
+        } catch (WebClientException e) {
+            log.warn("Get views count of uri " + uri + "by statistics client was not successful.", e);
+            return 0L;
+        } catch (Throwable e) {
+            log.warn("Unexpected error while getting views count of uri " + uri + " by statistics client.", e);
+            return 0L;
+        }
+        if (stats.size() != 1 || !uri.equals(stats.get(0).getUri())) {
+            log.warn("Strange response from statistics server. Requested uri=" + uri + ". Response: " + stats);
+            return 0L;
+        }
+        return stats.get(0).getHits();
+    }
+
+    private Map<Long, Integer> findConfirmedRequestsCountsByEventId(List<EventEntity> eventEntities) {
+        List<Long> eventIds = eventEntities.stream().map(EventEntity::getId).collect(Collectors.toList());
+        List<RequestRepository.CountById> requestsCount =
+                requestRepository.countByEventIdInAndStatus(eventIds, RequestStatus.CONFIRMED);
+        return requestsCount.stream()
+                .collect(Collectors.toMap(
+                        RequestRepository.CountById::getId,
+                        RequestRepository.CountById::getCount
+                ));
     }
 
     private EventDtoOut returnPatchedEventDto(EventDtoInPatch eventDtoInPatch, EventEntity eventEntity) {

@@ -1,7 +1,6 @@
 package ru.practicum.ewm.main.event.controller;
 
 import lombok.RequiredArgsConstructor;
-import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.format.annotation.DateTimeFormat;
 import org.springframework.http.HttpStatus;
@@ -10,6 +9,7 @@ import org.springframework.web.bind.annotation.*;
 import ru.practicum.ewm.main.event.dto.*;
 import ru.practicum.ewm.main.event.service.EventService;
 
+import javax.servlet.http.HttpServletRequest;
 import javax.validation.Valid;
 import javax.validation.constraints.Positive;
 import javax.validation.constraints.PositiveOrZero;
@@ -74,6 +74,14 @@ public class EventController {
             @RequestParam(defaultValue = "0") @PositiveOrZero Integer from,
             @RequestParam(defaultValue = "10") @Positive Integer size) {
         return eventService.findByFiltersAdmin(users, states, categories, rangeStart, rangeEnd, from, size);
+    }
+
+    // Public API
+
+    @GetMapping("/events/{id}")
+    public EventDtoOut findPublishedEventById(@PathVariable("id") Long eventId,
+                                              HttpServletRequest httpServletRequest) {
+        return eventService.findPublishedEventById(eventId, httpServletRequest);
     }
 
 }

@@ -3,6 +3,7 @@ package ru.practicum.ewm.main.event.service;
 import org.springframework.transaction.annotation.Transactional;
 import ru.practicum.ewm.main.event.dto.*;
 
+import javax.servlet.http.HttpServletRequest;
 import java.time.LocalDateTime;
 import java.util.List;
 
@@ -25,4 +26,6 @@ public interface EventService {
                                          LocalDateTime rangeEnd,
                                          Integer from,
                                          Integer size);
+
+    EventDtoOut findPublishedEventById(Long eventId, HttpServletRequest httpServletRequest);
 }

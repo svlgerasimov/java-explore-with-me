@@ -130,7 +130,7 @@ public class RequestServiceImpl implements RequestService {
                         requestEntity -> requestEntity.setStatus(RequestStatus.CONFIRMED)
                 );
                 if (curParticipants + confirmedRequests.size() >= participantsLimit) {
-                    requestRepository.replaceStatus(RequestStatus.PENDING, RequestStatus.REJECTED);
+                    requestRepository.replaceStatus(eventId, RequestStatus.PENDING, RequestStatus.REJECTED);
                 }
                 break;
             case REJECTED:

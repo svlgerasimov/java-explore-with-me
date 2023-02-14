@@ -1,6 +1,7 @@
 package ru.practicum.ewm.main.request.repository;
 
 import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.Modifying;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 import ru.practicum.ewm.main.request.dto.RequestStatus;
@@ -16,7 +17,9 @@ public interface RequestRepository extends JpaRepository<RequestEntity, Long> {
     int countByEventIdAndStatus(@Param("eventId") Long eventId, @Param("status") RequestStatus status);
 
     interface CountById {
+
         Long getId();
+
         Integer getCount();
     }
 
@@ -34,7 +37,10 @@ public interface RequestRepository extends JpaRepository<RequestEntity, Long> {
 
     List<RequestEntity> findAllByEventId(Long eventId);
 
-    @Query(value = "UPDATE RequestEntity r SET r.status=:newStatus WHERE r.status=:oldStatus")
-    void replaceStatus(@Param("oldStatus") RequestStatus oldStatus,
-                       @Param("newStatus") RequestStatus newStatus);
+    @Modifying
+    @Query(value = "UPDATE RequestEntity r SET r.status=:newStatus " +
+            "WHERE r.event=:eventId and r.status=:oldStatus")
+    void replaceStatus(@Param("eventId") Long eventId,
+                        @Param("oldStatus") RequestStatus oldStatus,
+                        @Param("newStatus") RequestStatus newStatus);
 }
