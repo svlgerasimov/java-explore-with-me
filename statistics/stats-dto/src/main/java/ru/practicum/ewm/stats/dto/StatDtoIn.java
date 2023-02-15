@@ -17,7 +17,6 @@ public class StatDtoIn {
     String app;
     @NotBlank
     String uri;
-//    @Pattern(regexp = "^(((25[0-4])|((2[0-4]|1\\d|[1-9])?\\d))\\.?\\b){4}$")
     @NotNull
     String ip;
     @JsonFormat(shape = JsonFormat.Shape.STRING, pattern = "yyyy-MM-dd HH:mm:ss")

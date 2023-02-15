@@ -93,7 +93,7 @@ public class EventController {
             @RequestParam(required = false) @DateTimeFormat(pattern = "yyyy-MM-dd HH:mm:ss") LocalDateTime rangeStart,
             @RequestParam(required = false) @DateTimeFormat(pattern = "yyyy-MM-dd HH:mm:ss") LocalDateTime rangeEnd,
             @RequestParam(defaultValue = "false") Boolean onlyAvailable,
-            @RequestParam(name = "sort") EventSortType sortType,
+            @RequestParam(name = "sort", defaultValue = "EVENT_DATE") EventSortType sortType,
             @RequestParam(defaultValue = "0") @PositiveOrZero Integer from,
             @RequestParam(defaultValue = "10") @Positive Integer size,
             HttpServletRequest httpServletRequest) {

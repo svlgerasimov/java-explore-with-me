@@ -2,7 +2,6 @@ package ru.practicum.ewm.main.compilations.model;
 
 import lombok.Getter;
 import lombok.Setter;
-import lombok.ToString;
 import ru.practicum.ewm.main.event.model.EventEntity;
 
 import javax.persistence.*;
@@ -12,7 +11,6 @@ import java.util.Objects;
 @Table(name = "compilations_events")
 @Getter
 @Setter
-@ToString
 public class CompilationEventEntity {
 
     @Id
@@ -38,5 +36,14 @@ public class CompilationEventEntity {
     @Override
     public int hashCode() {
         return getClass().hashCode();
+    }
+
+    @Override
+    public String toString() {
+        return "CompilationEventEntity{" +
+                "id=" + id +
+                ", compilation=" + compilation.getId() +
+                ", event=" + event.getId() +
+                '}';
     }
 }

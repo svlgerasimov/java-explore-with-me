@@ -7,12 +7,13 @@ import org.springframework.data.repository.query.Param;
 import ru.practicum.ewm.main.event.dto.EventState;
 import ru.practicum.ewm.main.event.model.EventEntity;
 
+import java.util.Collection;
 import java.util.List;
 import java.util.Optional;
 
 public interface EventRepository
         extends JpaRepository<EventEntity, Long>,
-        EventCustomRepository{
+        EventCustomRepository {
 
     @Query(value = "select e from EventEntity e " +
             "join fetch e.initiator " +
@@ -39,5 +40,5 @@ public interface EventRepository
             "join fetch e.initiator " +
             "join fetch e.category " +
             "where e.id in :eventIds")
-    List<EventEntity> findAllByIdIn(List<Long> eventIds);
+    List<EventEntity> findAllByIdIn(Collection<Long> eventIds);
 }

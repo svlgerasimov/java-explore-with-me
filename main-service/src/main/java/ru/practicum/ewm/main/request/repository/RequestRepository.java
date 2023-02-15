@@ -10,7 +10,8 @@ import ru.practicum.ewm.main.request.model.RequestEntity;
 import java.util.List;
 import java.util.Optional;
 
-public interface RequestRepository extends JpaRepository<RequestEntity, Long> {
+public interface RequestRepository extends JpaRepository<RequestEntity, Long>,
+        RequestCustomRepository {
 
     @Query (value = "SELECT COUNT(rq) FROM RequestEntity as rq " +
             "WHERE rq.event.id=:eventId AND rq.status=:status")
@@ -40,7 +41,7 @@ public interface RequestRepository extends JpaRepository<RequestEntity, Long> {
 
     @Modifying
     @Query(value = "UPDATE RequestEntity r SET r.status=:newStatus " +
-            "WHERE r.event=:eventId and r.status=:oldStatus")
+            "WHERE r.event.id=:eventId and r.status=:oldStatus")
     void replaceStatus(@Param("eventId") Long eventId,
                         @Param("oldStatus") RequestStatus oldStatus,
                         @Param("newStatus") RequestStatus newStatus);

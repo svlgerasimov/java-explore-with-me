@@ -15,7 +15,7 @@ public interface CompilationService {
     void delete(Long id);
 
     @Transactional
-    CompilationDtoOut patch(CompilationDtoInPatch compilationDtoInPatch);
+    CompilationDtoOut patch(Long compId, CompilationDtoInPatch compilationDtoInPatch);
 
     List<CompilationDtoOut> findAll(Boolean pinned, Integer from, Integer size);
 

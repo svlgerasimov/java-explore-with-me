@@ -115,13 +115,6 @@ class StatControllerTest {
         testSaveHitWithInvalidDto(statDtoIn);
     }
 
-//    @Test
-//    void saveHit_givenDtoWithInvalidIp_andThenStatusBadRequest() throws Exception {
-//        StatDtoIn statDtoIn = statDtoInBuilder.ip("192.163.0.256").build();
-//
-//        testSaveHitWithInvalidDto(statDtoIn);
-//    }
-
     @Test
     void saveHit_givenDtoWithNullIp_andThenStatusBadRequest() throws Exception {
         StatDtoIn statDtoIn = statDtoInBuilder.ip(null).build();

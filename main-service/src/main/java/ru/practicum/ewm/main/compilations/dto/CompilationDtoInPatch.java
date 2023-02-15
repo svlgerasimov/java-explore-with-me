@@ -5,7 +5,6 @@ import lombok.Value;
 import lombok.extern.jackson.Jacksonized;
 import ru.practicum.ewm.main.util.validation.NullableNotBlank;
 
-import javax.validation.constraints.NotBlank;
 import java.util.Set;
 
 @Value

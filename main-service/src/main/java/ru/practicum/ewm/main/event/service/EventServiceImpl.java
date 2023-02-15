@@ -1,6 +1,5 @@
 package ru.practicum.ewm.main.event.service;
 
-import com.querydsl.core.BooleanBuilder;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -8,28 +7,23 @@ import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
-import org.springframework.web.reactive.function.client.WebClientException;
 import ru.practicum.ewm.main.category.model.CategoryEntity;
 import ru.practicum.ewm.main.category.repository.CategoryRepository;
 import ru.practicum.ewm.main.event.dto.*;
 import ru.practicum.ewm.main.event.model.EventDtoMapper;
 import ru.practicum.ewm.main.event.model.EventEntity;
-import ru.practicum.ewm.main.event.model.QEventEntity;
 import ru.practicum.ewm.main.event.repository.EventRepository;
 import ru.practicum.ewm.main.exception.ConditionsNotMetException;
 import ru.practicum.ewm.main.exception.NotFoundException;
 import ru.practicum.ewm.main.exception.NotImplementedException;
 import ru.practicum.ewm.main.request.dto.RequestStatus;
 import ru.practicum.ewm.main.request.repository.RequestRepository;
+import ru.practicum.ewm.main.statistics.StatisticsService;
 import ru.practicum.ewm.main.user.model.UserEntity;
 import ru.practicum.ewm.main.user.repository.UserRepository;
-import ru.practicum.ewm.stats.client.StatClient;
-import ru.practicum.ewm.stats.dto.StatDtoIn;
-import ru.practicum.ewm.stats.dto.StatDtoOut;
 
 import javax.servlet.http.HttpServletRequest;
 import java.time.LocalDateTime;
-import java.util.Collection;
 import java.util.Comparator;
 import java.util.List;
 import java.util.Map;
@@ -45,13 +39,7 @@ public class EventServiceImpl implements EventService {
     private final CategoryRepository categoryRepository;
     private final RequestRepository requestRepository;
     private final EventDtoMapper eventDtoMapper;
-    private final StatClient statClient;
-
-    private static final LocalDateTime MIN_DATE =
-            LocalDateTime.of(2000, 1, 1, 0, 0);
-    private static final LocalDateTime MAX_DATE =
-            LocalDateTime.of(9999, 12, 31, 23, 59);
-    private static final boolean UNIQUE_VIEWS = false;
+    private final StatisticsService statisticsService;
 
     @Override
     @Transactional
@@ -77,10 +65,11 @@ public class EventServiceImpl implements EventService {
                 .map(EventEntity::getId)
                 .collect(Collectors.toList());
 
-        Map<Long, Integer> requestCountsByEventId = findConfirmedRequestsCountsByEventId(eventEntities);
-        Map<Long, Long> viewCountsByEventId = getViewsCountByEventIdFromStatistics(eventIds, UNIQUE_VIEWS);
+        Map<Long, Integer> requestCountsByEventId =
+                requestRepository.findConfirmedRequestsCountsByEvent(eventEntities);
+        Map<Long, Long> viewCountsByEventId =
+                statisticsService.getViewsCountByEventIdFromStatistics(eventIds);
 
-        log.debug(eventEntities.toString());
         return eventDtoMapper.toDtoShort(eventEntities, requestCountsByEventId, viewCountsByEventId);
     }
 
@@ -88,7 +77,7 @@ public class EventServiceImpl implements EventService {
     public EventDtoOut findByEventIdAndInitiatorId(Long eventId, Long userId) {
         EventEntity eventEntity = findEventEntityByIdAndInitiatorId(eventId, userId);
         int confirmedRequests = requestRepository.countByEventIdAndStatus(eventId, RequestStatus.CONFIRMED);
-        long views = getViewsCountFromStatistics(eventId, UNIQUE_VIEWS);
+        long views = statisticsService.getViewsCountFromStatistics(eventId);
         return eventDtoMapper.toDtoFull(eventEntity, confirmedRequests, views);
     }
 
@@ -178,24 +167,6 @@ public class EventServiceImpl implements EventService {
                                                 Integer from,
                                                 Integer size) {
 
-        BooleanBuilder filtersBuilder = new BooleanBuilder();
-
-        if (users != null) {
-            filtersBuilder.and(QEventEntity.eventEntity.initiator.id.in(users));
-        }
-        if (states != null) {
-            filtersBuilder.and(QEventEntity.eventEntity.state.in(states));
-        }
-        if (categories != null) {
-            filtersBuilder.and(QEventEntity.eventEntity.category.id.in(categories));
-        }
-        if (rangeStart != null) {
-            filtersBuilder.and(QEventEntity.eventEntity.eventDate.after(rangeStart));
-        }
-        if (rangeEnd != null) {
-            filtersBuilder.and(QEventEntity.eventEntity.eventDate.before(rangeEnd));
-        }
-
         List<EventEntity> eventEntities = eventRepository.findByFiltersAdmin(
                 users,
                 states,
@@ -206,11 +177,13 @@ public class EventServiceImpl implements EventService {
                 size
         );
 
-        Map<Long, Integer> requestCountsByEventId = findConfirmedRequestsCountsByEventId(eventEntities);
+        Map<Long, Integer> requestCountsByEventId =
+                requestRepository.findConfirmedRequestsCountsByEvent(eventEntities);
         List<Long> eventIds = eventEntities.stream()
                 .map(EventEntity::getId)
                 .collect(Collectors.toList());
-        Map<Long, Long> viewCountsByEventId = getViewsCountByEventIdFromStatistics(eventIds, UNIQUE_VIEWS);
+        Map<Long, Long> viewCountsByEventId =
+                statisticsService.getViewsCountByEventIdFromStatistics(eventIds);
 
         return eventDtoMapper.toDtoFull(
                 eventEntities,
@@ -224,9 +197,9 @@ public class EventServiceImpl implements EventService {
         EventEntity eventEntity = eventRepository.findByIdAndState(eventId, EventState.PUBLISHED)
                 .orElseThrow(() -> new NotFoundException("Published event with id=" + eventId + " was not found"));
         int confirmedRequests = requestRepository.countByEventIdAndStatus(eventId, RequestStatus.CONFIRMED);
-        long views = getViewsCountFromStatistics(eventId, UNIQUE_VIEWS);
+        long views = statisticsService.getViewsCountFromStatistics(eventId);
 
-        hitToStatistics(httpServletRequest);
+        statisticsService.hitToStatistics(httpServletRequest);
 
         return eventDtoMapper.toDtoFull(eventEntity, confirmedRequests, views);
     }
@@ -250,7 +223,7 @@ public class EventServiceImpl implements EventService {
             default:
                 throw new NotImplementedException("Sort type " + sortType + " is not implemented.");
         }
-        hitToStatistics(httpServletRequest);
+        statisticsService.hitToStatistics(httpServletRequest);
         return eventDtos;
     }
 
@@ -262,15 +235,12 @@ public class EventServiceImpl implements EventService {
         List<Long> eventIds = eventRepository.findIdsOfPublishedEventsByFilters(
                 text, categories, paid, rangeStart, rangeEnd, onlyAvailable);
 
-        Map<Long, Long> viewCountsByEventId = getViewsCountByEventIdFromStatistics(eventIds, UNIQUE_VIEWS);
-
-
+        Map<Long, Long> viewCountsByEventId =
+                statisticsService.getViewsCountByEventIdFromStatistics(eventIds);
 
         List<Long> limitedIds = eventIds.stream()
                 .sorted(Comparator.comparingLong(id -> viewCountsByEventId.getOrDefault(id, 0L))
                         .reversed())
-//                viewCountsByEventId.entrySet().stream()
-//                .sorted(Comparator.comparingLong(Map.Entry::getValue))
                 .skip(from)
                 .limit(size)
                 .collect(Collectors.toList());
@@ -279,7 +249,8 @@ public class EventServiceImpl implements EventService {
                 .sorted(Comparator.<EventEntity>comparingLong(eventEntity ->
                         viewCountsByEventId.getOrDefault(eventEntity.getId(), 0L)).reversed())
                 .collect(Collectors.toList());
-        Map<Long, Integer> requestCountsByEventId = findConfirmedRequestsCountsByEventId(eventEntities);
+        Map<Long, Integer> requestCountsByEventId =
+                requestRepository.findConfirmedRequestsCountsByEvent(eventEntities);
         return eventDtoMapper.toDtoShort(
                 eventEntities,
                 requestCountsByEventId,
@@ -297,105 +268,18 @@ public class EventServiceImpl implements EventService {
         List<EventEntity> eventEntities = eventRepository.findPublishedEventsByFiltersOrderByDate(
                 text, categories, paid, rangeStart, rangeEnd, onlyAvailable, from, size);
 
-        Map<Long, Integer> requestCountsByEventId = findConfirmedRequestsCountsByEventId(eventEntities);
+        Map<Long, Integer> requestCountsByEventId =
+                requestRepository.findConfirmedRequestsCountsByEvent(eventEntities);
         List<Long> eventIds = eventEntities.stream()
                 .map(EventEntity::getId)
                 .collect(Collectors.toList());
-        Map<Long, Long> viewCountsByEventId = getViewsCountByEventIdFromStatistics(eventIds, UNIQUE_VIEWS);
+        Map<Long, Long> viewCountsByEventId =
+                statisticsService.getViewsCountByEventIdFromStatistics(eventIds);
 
         return eventDtoMapper.toDtoShort(
                 eventEntities,
                 requestCountsByEventId,
                 viewCountsByEventId);
-    }
-
-    private void hitToStatistics(HttpServletRequest httpServletRequest) {
-        try {
-            statClient.saveHit(
-                    StatDtoIn.builder()
-                            .app("ewm-main")
-                            .uri(httpServletRequest.getRequestURI())
-                            .ip(httpServletRequest.getRemoteAddr())
-                            .timestamp(LocalDateTime.now())
-                            .build()
-            );
-        } catch (WebClientException e) {
-            log.warn("Save endpoint hit by statistics client was not successful.", e);
-        } catch (Throwable e) {
-            log.warn("Unexpected error while saving endpoint by statistics client.", e);
-        }
-    }
-
-    private Long getViewsCountFromStatistics(Long eventId, boolean unique) {
-        String uri = "/events/" + eventId;
-        List<StatDtoOut> stats;
-        try {
-            stats = statClient.getStats(
-                    MIN_DATE,
-                    MAX_DATE,
-                    List.of(uri),
-                    unique);
-        } catch (WebClientException e) {
-            log.warn("Get views count of uri " + uri + "by statistics client was not successful.", e);
-            return 0L;
-        } catch (Throwable e) {
-            log.warn("Unexpected error while getting views count of uri " + uri + " by statistics client.", e);
-            return 0L;
-        }
-        if (stats.isEmpty()) {
-            return 0L;
-        }
-        if (stats.size() > 1 || !uri.equals(stats.get(0).getUri())) {
-            log.warn("Strange response from statistics server. Requested uri=" + uri + ". Response: " + stats);
-            return 0L;
-        }
-        return stats.get(0).getHits();
-    }
-
-    private Map<Long, Long> getViewsCountByEventIdFromStatistics(Collection<Long> eventIds, boolean unique) {
-
-        List<String> uris = eventIds.stream()
-                .map(eventId -> "/events/" + eventId)
-                .collect(Collectors.toList());
-
-        List<StatDtoOut> stats;
-        try {
-            stats = statClient.getStats(
-                    MIN_DATE,
-                    MAX_DATE,
-                    uris,
-                    unique);
-        } catch (WebClientException e) {
-            log.warn("Get views count of uris by statistics client was not successful.", e);
-            return Map.of();
-        } catch (Throwable e) {
-            log.warn("Unexpected error while getting views count of uris by statistics client.", e);
-            return Map.of();
-        }
-
-        try {
-            return stats.stream()
-                    .collect(Collectors.toMap(
-                            statDtoOut -> Long.parseLong(
-                                    statDtoOut.getUri().replaceFirst("/events/", "")),
-                            StatDtoOut::getHits,
-                            (hits1, hits2) -> hits1)
-                    );
-        } catch (Throwable e) {
-            log.warn("Strange response from statistics server. Response: " + stats);
-            return Map.of();
-        }
-    }
-
-    private Map<Long, Integer> findConfirmedRequestsCountsByEventId(List<EventEntity> eventEntities) {
-        List<Long> eventIds = eventEntities.stream().map(EventEntity::getId).collect(Collectors.toList());
-        List<RequestRepository.CountById> requestsCount =
-                requestRepository.countByEventIdInAndStatus(eventIds, RequestStatus.CONFIRMED);
-        return requestsCount.stream()
-                .collect(Collectors.toMap(
-                        RequestRepository.CountById::getId,
-                        RequestRepository.CountById::getCount
-                ));
     }
 
     private EventDtoOut returnPatchedEventDto(EventDtoInPatch eventDtoInPatch, EventEntity eventEntity) {

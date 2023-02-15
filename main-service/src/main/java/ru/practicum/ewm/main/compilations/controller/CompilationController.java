@@ -35,8 +35,9 @@ public class CompilationController {
     }
 
     @PatchMapping("/admin/compilations/{compId}")
-    public CompilationDtoOut patch(@RequestBody @Valid CompilationDtoInPatch compilationDtoInPatch) {
-        return compilationService.patch(compilationDtoInPatch);
+    public CompilationDtoOut patch(@PathVariable Long compId,
+                                   @RequestBody @Valid CompilationDtoInPatch compilationDtoInPatch) {
+        return compilationService.patch(compId, compilationDtoInPatch);
     }
 
     @GetMapping("/compilations")
