@@ -28,4 +28,10 @@ public interface EventService {
                                          Integer size);
 
     EventDtoOut findPublishedEventById(Long eventId, HttpServletRequest httpServletRequest);
+
+    List<EventDtoOutShort> findPublishedEventsByFilters(String text, List<Long> categories, Boolean paid,
+                                                        LocalDateTime rangeStart, LocalDateTime rangeEnd,
+                                                        Boolean onlyAvailable, EventSortType sortType,
+                                                        Integer from, Integer size,
+                                                        HttpServletRequest httpServletRequest);
 }

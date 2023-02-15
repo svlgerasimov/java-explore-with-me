@@ -8,6 +8,7 @@ import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
 import ru.practicum.ewm.main.event.dto.*;
 import ru.practicum.ewm.main.event.service.EventService;
+import ru.practicum.ewm.main.event.service.EventSortType;
 
 import javax.servlet.http.HttpServletRequest;
 import javax.validation.Valid;
@@ -82,6 +83,22 @@ public class EventController {
     public EventDtoOut findPublishedEventById(@PathVariable("id") Long eventId,
                                               HttpServletRequest httpServletRequest) {
         return eventService.findPublishedEventById(eventId, httpServletRequest);
+    }
+
+    @GetMapping("/events")
+    public List<EventDtoOutShort> findPublishedEventsByFilters(
+            @RequestParam(required = false) String text,
+            @RequestParam(required = false) List<Long> categories,
+            @RequestParam(required = false) Boolean paid,
+            @RequestParam(required = false) @DateTimeFormat(pattern = "yyyy-MM-dd HH:mm:ss") LocalDateTime rangeStart,
+            @RequestParam(required = false) @DateTimeFormat(pattern = "yyyy-MM-dd HH:mm:ss") LocalDateTime rangeEnd,
+            @RequestParam(defaultValue = "false") Boolean onlyAvailable,
+            @RequestParam(name = "sort") EventSortType sortType,
+            @RequestParam(defaultValue = "0") @PositiveOrZero Integer from,
+            @RequestParam(defaultValue = "10") @Positive Integer size,
+            HttpServletRequest httpServletRequest) {
+        return eventService.findPublishedEventsByFilters(text, categories, paid, rangeStart, rangeEnd,
+                onlyAvailable, sortType, from, size, httpServletRequest);
     }
 
 }

@@ -1,8 +1,6 @@
 package ru.practicum.ewm.main.event.service;
 
 import com.querydsl.core.BooleanBuilder;
-import com.querydsl.core.types.dsl.BooleanExpression;
-import com.querydsl.core.types.dsl.Expressions;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -32,13 +30,10 @@ import ru.practicum.ewm.stats.dto.StatDtoOut;
 import javax.servlet.http.HttpServletRequest;
 import java.time.LocalDateTime;
 import java.util.Collection;
-import java.util.HashMap;
+import java.util.Comparator;
 import java.util.List;
 import java.util.Map;
-import java.util.function.BinaryOperator;
-import java.util.function.Function;
 import java.util.stream.Collectors;
-import java.util.stream.StreamSupport;
 
 @Service
 @RequiredArgsConstructor(onConstructor = @__(@Autowired))
@@ -56,7 +51,7 @@ public class EventServiceImpl implements EventService {
             LocalDateTime.of(2000, 1, 1, 0, 0);
     private static final LocalDateTime MAX_DATE =
             LocalDateTime.of(9999, 12, 31, 23, 59);
-    private static boolean UNIQUE_VIEWS = false;
+    private static final boolean UNIQUE_VIEWS = false;
 
     @Override
     @Transactional
@@ -201,10 +196,15 @@ public class EventServiceImpl implements EventService {
             filtersBuilder.and(QEventEntity.eventEntity.eventDate.before(rangeEnd));
         }
 
-        Iterable<EventEntity> eventsIterable = eventRepository.findAll(filtersBuilder);
-        List<EventEntity> eventEntities =
-                StreamSupport.stream(eventsIterable.spliterator(), false)
-                        .collect(Collectors.toList());
+        List<EventEntity> eventEntities = eventRepository.findByFiltersAdmin(
+                users,
+                states,
+                categories,
+                rangeStart,
+                rangeEnd,
+                from,
+                size
+        );
 
         Map<Long, Integer> requestCountsByEventId = findConfirmedRequestsCountsByEventId(eventEntities);
         List<Long> eventIds = eventEntities.stream()
@@ -229,6 +229,84 @@ public class EventServiceImpl implements EventService {
         hitToStatistics(httpServletRequest);
 
         return eventDtoMapper.toDtoFull(eventEntity, confirmedRequests, views);
+    }
+
+    @Override
+    public List<EventDtoOutShort> findPublishedEventsByFilters(String text, List<Long> categories, Boolean paid,
+                                                               LocalDateTime rangeStart, LocalDateTime rangeEnd,
+                                                               Boolean onlyAvailable, EventSortType sortType,
+                                                               Integer from, Integer size,
+                                                               HttpServletRequest httpServletRequest) {
+        List<EventDtoOutShort> eventDtos;
+        switch (sortType) {
+            case EVENT_DATE:
+                eventDtos = findPublishedEventsByFiltersOrderByDate(text, categories, paid,
+                        rangeStart, rangeEnd, onlyAvailable, from, size);
+                break;
+            case VIEWS:
+                eventDtos = findPublishedEventsByFiltersOrderByViews(text, categories, paid,
+                        rangeStart, rangeEnd, onlyAvailable, from, size);
+                break;
+            default:
+                throw new NotImplementedException("Sort type " + sortType + " is not implemented.");
+        }
+        hitToStatistics(httpServletRequest);
+        return eventDtos;
+    }
+
+    private List<EventDtoOutShort> findPublishedEventsByFiltersOrderByViews(String text, List<Long> categories,
+                                                                            Boolean paid, LocalDateTime rangeStart,
+                                                                            LocalDateTime rangeEnd,
+                                                                            Boolean onlyAvailable,
+                                                                            Integer from, Integer size) {
+        List<Long> eventIds = eventRepository.findIdsOfPublishedEventsByFilters(
+                text, categories, paid, rangeStart, rangeEnd, onlyAvailable);
+
+        Map<Long, Long> viewCountsByEventId = getViewsCountByEventIdFromStatistics(eventIds, UNIQUE_VIEWS);
+
+
+
+        List<Long> limitedIds = eventIds.stream()
+                .sorted(Comparator.comparingLong(id -> viewCountsByEventId.getOrDefault(id, 0L))
+                        .reversed())
+//                viewCountsByEventId.entrySet().stream()
+//                .sorted(Comparator.comparingLong(Map.Entry::getValue))
+                .skip(from)
+                .limit(size)
+                .collect(Collectors.toList());
+
+        List<EventEntity> eventEntities = eventRepository.findAllByIdIn(limitedIds).stream()
+                .sorted(Comparator.<EventEntity>comparingLong(eventEntity ->
+                        viewCountsByEventId.getOrDefault(eventEntity.getId(), 0L)).reversed())
+                .collect(Collectors.toList());
+        Map<Long, Integer> requestCountsByEventId = findConfirmedRequestsCountsByEventId(eventEntities);
+        return eventDtoMapper.toDtoShort(
+                eventEntities,
+                requestCountsByEventId,
+                viewCountsByEventId);
+    }
+
+    private List<EventDtoOutShort> findPublishedEventsByFiltersOrderByDate(String text,
+                                                                           List<Long> categories,
+                                                                           Boolean paid,
+                                                                           LocalDateTime rangeStart,
+                                                                           LocalDateTime rangeEnd,
+                                                                           Boolean onlyAvailable,
+                                                                           Integer from,
+                                                                           Integer size) {
+        List<EventEntity> eventEntities = eventRepository.findPublishedEventsByFiltersOrderByDate(
+                text, categories, paid, rangeStart, rangeEnd, onlyAvailable, from, size);
+
+        Map<Long, Integer> requestCountsByEventId = findConfirmedRequestsCountsByEventId(eventEntities);
+        List<Long> eventIds = eventEntities.stream()
+                .map(EventEntity::getId)
+                .collect(Collectors.toList());
+        Map<Long, Long> viewCountsByEventId = getViewsCountByEventIdFromStatistics(eventIds, UNIQUE_VIEWS);
+
+        return eventDtoMapper.toDtoShort(
+                eventEntities,
+                requestCountsByEventId,
+                viewCountsByEventId);
     }
 
     private void hitToStatistics(HttpServletRequest httpServletRequest) {
