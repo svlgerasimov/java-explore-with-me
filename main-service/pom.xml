@@ -138,9 +138,7 @@
                 <artifactId>jacoco-maven-plugin</artifactId>
                 <configuration>
                     <excludes>
-                        <exclude>ru/practicum/ewm/main/user/model/QUserEntity.class</exclude>
-                        <exclude>ru/practicum/ewm/main/categories/model/QCategoryEntity.class</exclude>
-                        <exclude>ru/practicum/ewm/main/*</exclude>
+                        <exclude>**/ru/practicum/ewm/main/**/*.*</exclude>
                     </excludes>
                 </configuration>
             </plugin>
