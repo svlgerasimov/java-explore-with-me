@@ -66,11 +66,11 @@ public class EventController {
 
     @GetMapping("/admin/events")
     public List<EventDtoOut> findByFiltersAdmin(
-            @RequestParam List<Long> users,
-            @RequestParam List<EventState> states,
-            @RequestParam List<Long> categories,
-            @RequestParam @DateTimeFormat(pattern = "yyyy-MM-dd HH:mm:ss") LocalDateTime rangeStart,
-            @RequestParam @DateTimeFormat(pattern = "yyyy-MM-dd HH:mm:ss") LocalDateTime rangeEnd,
+            @RequestParam(required = false) List<Long> users,
+            @RequestParam(required = false) List<EventState> states,
+            @RequestParam(required = false) List<Long> categories,
+            @RequestParam(required = false) @DateTimeFormat(pattern = "yyyy-MM-dd HH:mm:ss") LocalDateTime rangeStart,
+            @RequestParam(required = false) @DateTimeFormat(pattern = "yyyy-MM-dd HH:mm:ss") LocalDateTime rangeEnd,
             @RequestParam(defaultValue = "0") @PositiveOrZero Integer from,
             @RequestParam(defaultValue = "10") @Positive Integer size) {
         return eventService.findByFiltersAdmin(users, states, categories, rangeStart, rangeEnd, from, size);

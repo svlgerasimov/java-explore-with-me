@@ -1,5 +1,6 @@
 package ru.practicum.ewm.main.event.service;
 
+import com.querydsl.core.BooleanBuilder;
 import com.querydsl.core.types.dsl.BooleanExpression;
 import com.querydsl.core.types.dsl.Expressions;
 import lombok.RequiredArgsConstructor;
@@ -30,8 +31,12 @@ import ru.practicum.ewm.stats.dto.StatDtoOut;
 
 import javax.servlet.http.HttpServletRequest;
 import java.time.LocalDateTime;
+import java.util.Collection;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.function.BinaryOperator;
+import java.util.function.Function;
 import java.util.stream.Collectors;
 import java.util.stream.StreamSupport;
 
@@ -40,13 +45,18 @@ import java.util.stream.StreamSupport;
 @Slf4j
 @Transactional(readOnly = true)
 public class EventServiceImpl implements EventService {
-
     private final EventRepository eventRepository;
     private final UserRepository userRepository;
     private final CategoryRepository categoryRepository;
     private final RequestRepository requestRepository;
     private final EventDtoMapper eventDtoMapper;
     private final StatClient statClient;
+
+    private static final LocalDateTime MIN_DATE =
+            LocalDateTime.of(2000, 1, 1, 0, 0);
+    private static final LocalDateTime MAX_DATE =
+            LocalDateTime.of(9999, 12, 31, 23, 59);
+    private static boolean UNIQUE_VIEWS = false;
 
     @Override
     @Transactional
@@ -68,33 +78,23 @@ public class EventServiceImpl implements EventService {
     public List<EventDtoOutShort> findAllByInitiatorId(Long userId, Integer from, Integer size) {
         Pageable pageable = PageRequest.of(from / size, size);
         List<EventEntity> eventEntities = eventRepository.findAllByInitiatorId(userId, pageable);
+        List<Long> eventIds = eventEntities.stream()
+                .map(EventEntity::getId)
+                .collect(Collectors.toList());
 
         Map<Long, Integer> requestCountsByEventId = findConfirmedRequestsCountsByEventId(eventEntities);
-        // TODO реализовать добавление количества просмотров
+        Map<Long, Long> viewCountsByEventId = getViewsCountByEventIdFromStatistics(eventIds, UNIQUE_VIEWS);
 
         log.debug(eventEntities.toString());
-        return eventDtoMapper.toDtoShort(eventEntities, requestCountsByEventId, Map.of());
+        return eventDtoMapper.toDtoShort(eventEntities, requestCountsByEventId, viewCountsByEventId);
     }
 
     @Override
     public EventDtoOut findByEventIdAndInitiatorId(Long eventId, Long userId) {
-        statClient.saveHit(StatDtoIn.builder()
-                        .app("ewm_main")
-                        .uri("/users/1/event/2")
-                        .ip("192.168.1.1")
-                        .timestamp(LocalDateTime.now())
-                .build());
-//        List<StatDtoOut> statDtoOuts = statClient.getStats(
-//                LocalDateTime.of(2020, 1, 1, 0, 0),
-//                LocalDateTime.of(2024, 2, 2, 0, 0),
-//                null,
-//                false
-//        );
-//        log.debug(statDtoOuts.toString());
         EventEntity eventEntity = findEventEntityByIdAndInitiatorId(eventId, userId);
         int confirmedRequests = requestRepository.countByEventIdAndStatus(eventId, RequestStatus.CONFIRMED);
-        // TODO реализовать добавление количества просмотров
-        return eventDtoMapper.toDtoFull(eventEntity, confirmedRequests, 0L);
+        long views = getViewsCountFromStatistics(eventId, UNIQUE_VIEWS);
+        return eventDtoMapper.toDtoFull(eventEntity, confirmedRequests, views);
     }
 
     @Override
@@ -183,35 +183,39 @@ public class EventServiceImpl implements EventService {
                                                 Integer from,
                                                 Integer size) {
 
-        BooleanExpression filtersExpression = Expressions.asBoolean(true);
+        BooleanBuilder filtersBuilder = new BooleanBuilder();
+
         if (users != null) {
-            filtersExpression = filtersExpression.and(QEventEntity.eventEntity.initiator.id.in(users));
+            filtersBuilder.and(QEventEntity.eventEntity.initiator.id.in(users));
         }
         if (states != null) {
-            filtersExpression = filtersExpression.and(QEventEntity.eventEntity.state.in(states));
+            filtersBuilder.and(QEventEntity.eventEntity.state.in(states));
         }
         if (categories != null) {
-            filtersExpression = filtersExpression.and(QEventEntity.eventEntity.category.id.in(categories));
+            filtersBuilder.and(QEventEntity.eventEntity.category.id.in(categories));
         }
         if (rangeStart != null) {
-            filtersExpression = filtersExpression.and(QEventEntity.eventEntity.eventDate.after(rangeStart));
+            filtersBuilder.and(QEventEntity.eventEntity.eventDate.after(rangeStart));
         }
         if (rangeEnd != null) {
-            filtersExpression = filtersExpression.and(QEventEntity.eventEntity.eventDate.before(rangeEnd));
+            filtersBuilder.and(QEventEntity.eventEntity.eventDate.before(rangeEnd));
         }
 
-        Iterable<EventEntity> eventsIterable = eventRepository.findAll(filtersExpression);
+        Iterable<EventEntity> eventsIterable = eventRepository.findAll(filtersBuilder);
         List<EventEntity> eventEntities =
                 StreamSupport.stream(eventsIterable.spliterator(), false)
                         .collect(Collectors.toList());
 
         Map<Long, Integer> requestCountsByEventId = findConfirmedRequestsCountsByEventId(eventEntities);
-        // TODO реализовать добавление количества просмотров
+        List<Long> eventIds = eventEntities.stream()
+                .map(EventEntity::getId)
+                .collect(Collectors.toList());
+        Map<Long, Long> viewCountsByEventId = getViewsCountByEventIdFromStatistics(eventIds, UNIQUE_VIEWS);
 
         return eventDtoMapper.toDtoFull(
                 eventEntities,
                 requestCountsByEventId,
-                Map.of()
+                viewCountsByEventId
         );
     }
 
@@ -220,11 +224,11 @@ public class EventServiceImpl implements EventService {
         EventEntity eventEntity = eventRepository.findByIdAndState(eventId, EventState.PUBLISHED)
                 .orElseThrow(() -> new NotFoundException("Published event with id=" + eventId + " was not found"));
         int confirmedRequests = requestRepository.countByEventIdAndStatus(eventId, RequestStatus.CONFIRMED);
-        // TODO реализовать добавление количества просмотров
+        long views = getViewsCountFromStatistics(eventId, UNIQUE_VIEWS);
 
         hitToStatistics(httpServletRequest);
 
-        return eventDtoMapper.toDtoFull(eventEntity, confirmedRequests, 0L);
+        return eventDtoMapper.toDtoFull(eventEntity, confirmedRequests, views);
     }
 
     private void hitToStatistics(HttpServletRequest httpServletRequest) {
@@ -248,7 +252,11 @@ public class EventServiceImpl implements EventService {
         String uri = "/events/" + eventId;
         List<StatDtoOut> stats;
         try {
-            stats = statClient.getStats(null, null, List.of(uri), unique);
+            stats = statClient.getStats(
+                    MIN_DATE,
+                    MAX_DATE,
+                    List.of(uri),
+                    unique);
         } catch (WebClientException e) {
             log.warn("Get views count of uri " + uri + "by statistics client was not successful.", e);
             return 0L;
@@ -256,11 +264,49 @@ public class EventServiceImpl implements EventService {
             log.warn("Unexpected error while getting views count of uri " + uri + " by statistics client.", e);
             return 0L;
         }
-        if (stats.size() != 1 || !uri.equals(stats.get(0).getUri())) {
+        if (stats.isEmpty()) {
+            return 0L;
+        }
+        if (stats.size() > 1 || !uri.equals(stats.get(0).getUri())) {
             log.warn("Strange response from statistics server. Requested uri=" + uri + ". Response: " + stats);
             return 0L;
         }
         return stats.get(0).getHits();
+    }
+
+    private Map<Long, Long> getViewsCountByEventIdFromStatistics(Collection<Long> eventIds, boolean unique) {
+
+        List<String> uris = eventIds.stream()
+                .map(eventId -> "/events/" + eventId)
+                .collect(Collectors.toList());
+
+        List<StatDtoOut> stats;
+        try {
+            stats = statClient.getStats(
+                    MIN_DATE,
+                    MAX_DATE,
+                    uris,
+                    unique);
+        } catch (WebClientException e) {
+            log.warn("Get views count of uris by statistics client was not successful.", e);
+            return Map.of();
+        } catch (Throwable e) {
+            log.warn("Unexpected error while getting views count of uris by statistics client.", e);
+            return Map.of();
+        }
+
+        try {
+            return stats.stream()
+                    .collect(Collectors.toMap(
+                            statDtoOut -> Long.parseLong(
+                                    statDtoOut.getUri().replaceFirst("/events/", "")),
+                            StatDtoOut::getHits,
+                            (hits1, hits2) -> hits1)
+                    );
+        } catch (Throwable e) {
+            log.warn("Strange response from statistics server. Response: " + stats);
+            return Map.of();
+        }
     }
 
     private Map<Long, Integer> findConfirmedRequestsCountsByEventId(List<EventEntity> eventEntities) {
