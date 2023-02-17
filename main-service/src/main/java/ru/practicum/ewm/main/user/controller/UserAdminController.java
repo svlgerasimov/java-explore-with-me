@@ -17,7 +17,7 @@ import java.util.List;
 @RestController
 @RequiredArgsConstructor(onConstructor = @__(@Autowired))
 @Validated
-public class UserController {
+public class UserAdminController {
 
     private final UserService userService;
 

@@ -21,7 +21,8 @@ import static org.springframework.test.web.servlet.request.MockMvcRequestBuilder
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
 import static ru.practicum.ewm.main.testutil.TestUtils.checkBadRequest;
 
-@WebMvcTest(controllers = CategoryController.class)
+@WebMvcTest(controllers = {CategoryPublicController.class,
+        CategoryAdminController.class})
 class CategoryControllerTest {
 
     @Autowired

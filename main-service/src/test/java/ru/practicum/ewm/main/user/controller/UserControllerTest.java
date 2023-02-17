@@ -24,7 +24,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 import static ru.practicum.ewm.main.testutil.TestUtils.checkBadRequest;
 import static ru.practicum.ewm.main.testutil.TestUtils.checkConflict;
 
-@WebMvcTest(controllers = UserController.class)
+@WebMvcTest(controllers = UserAdminController.class)
 class UserControllerTest {
 
     @Autowired

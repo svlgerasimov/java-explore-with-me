@@ -14,11 +14,9 @@ import java.util.List;
 
 @RestController
 @RequiredArgsConstructor(onConstructor = @__(@Autowired))
-public class RequestController {
+public class RequestPrivateController {
 
     private final RequestService requestService;
-
-    // Private API
 
     @GetMapping("/users/{userId}/requests")
     public List<RequestDtoOut> findAllByRequester(@PathVariable Long userId) {

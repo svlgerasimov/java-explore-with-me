@@ -26,7 +26,9 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static ru.practicum.ewm.main.testutil.TestUtils.checkBadRequest;
 
-@WebMvcTest(controllers = EventController.class)
+@WebMvcTest(controllers = {EventPublicController.class,
+        EventPrivateController.class,
+        EventAdminController.class})
 @Slf4j
 class EventControllerTest {
 
