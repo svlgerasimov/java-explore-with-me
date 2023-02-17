@@ -4,7 +4,6 @@ import com.fasterxml.jackson.annotation.JsonFormat;
 import lombok.Builder;
 import lombok.Value;
 import lombok.extern.jackson.Jacksonized;
-import ru.practicum.ewm.main.util.validation.After;
 
 import javax.validation.Valid;
 import javax.validation.constraints.NotNull;
@@ -30,7 +29,6 @@ public class EventDtoIn {
 
     @JsonFormat(shape = JsonFormat.Shape.STRING, pattern = "yyyy-MM-dd HH:mm:ss")
     @NotNull
-    @After(hours = 2)
     LocalDateTime eventDate;
 
     @NotNull

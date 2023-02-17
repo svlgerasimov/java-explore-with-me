@@ -33,6 +33,10 @@ public class AfterValidator implements ConstraintValidator<After, LocalDateTime>
                 .plusMinutes(minutes)
                 .plusSeconds(seconds);
 
+        // Здесь всё-таки есть защита от всяких странных штук.
+        // Если бросать здесь исключение, то обработчик поймает в итоге не его, а вот такое:
+        // "javax.validation.ValidationException: HV000028: Unexpected exception during isValid call"
+
         return localDateTime.isAfter(limit);
     }
 }
