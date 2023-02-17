@@ -6,13 +6,14 @@ import lombok.extern.jackson.Jacksonized;
 
 import javax.validation.constraints.Email;
 import javax.validation.constraints.NotBlank;
+import javax.validation.constraints.NotEmpty;
 
 @Value
 @Builder
 @Jacksonized
 public class UserDtoIn {
     @Email
-    @NotBlank
+    @NotEmpty
     String email;
     @NotBlank
     String name;

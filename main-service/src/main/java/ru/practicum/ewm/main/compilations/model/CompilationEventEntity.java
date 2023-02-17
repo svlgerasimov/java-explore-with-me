@@ -19,11 +19,11 @@ public class CompilationEventEntity {
 
     @ManyToOne
     @JoinColumn(name = "comp_id")
-    CompilationEntity compilation;
+    private CompilationEntity compilation;
 
     @ManyToOne
     @JoinColumn(name = "event_id")
-    EventEntity event;
+    private EventEntity event;
 
     @Override
     public boolean equals(Object o) {

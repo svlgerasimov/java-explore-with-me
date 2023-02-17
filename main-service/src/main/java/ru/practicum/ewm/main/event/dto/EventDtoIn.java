@@ -6,7 +6,9 @@ import lombok.Value;
 import lombok.extern.jackson.Jacksonized;
 
 import javax.validation.Valid;
+import javax.validation.constraints.Future;
 import javax.validation.constraints.NotNull;
+import javax.validation.constraints.PositiveOrZero;
 import javax.validation.constraints.Size;
 import java.time.LocalDateTime;
 
@@ -28,6 +30,7 @@ public class EventDtoIn {
 
     @JsonFormat(shape = JsonFormat.Shape.STRING, pattern = "yyyy-MM-dd HH:mm:ss")
     @NotNull
+    @Future
     LocalDateTime eventDate;
 
     @NotNull
@@ -35,13 +38,14 @@ public class EventDtoIn {
     LocationDto location;
 
     @Builder.Default
-    Boolean paid = false;
+    boolean paid = false;
 
     @Builder.Default
-    Integer participantLimit = 0;
+    @PositiveOrZero
+    int participantLimit = 0;
 
     @Builder.Default
-    Boolean requestModeration = true;
+    boolean requestModeration = true;
 
     @NotNull
     @Size(min = 3, max = 120)

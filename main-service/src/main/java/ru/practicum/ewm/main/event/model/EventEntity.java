@@ -36,7 +36,6 @@ public class EventEntity {
     @Column(name = "event_date")
     private LocalDateTime eventDate;
 
-    @Embedded
     @AttributeOverrides({
             @AttributeOverride(name = "latitude", column = @Column(name = "location_latitude")),
             @AttributeOverride(name = "longitude", column = @Column(name = "location_longitude"))

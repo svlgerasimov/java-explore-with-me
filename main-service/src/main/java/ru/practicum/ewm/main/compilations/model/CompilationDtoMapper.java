@@ -28,11 +28,8 @@ public interface CompilationDtoMapper {
         return compilationEntities.stream()
                 .map(compilationEntity -> {
                     Long compId = compilationEntity.getId();
-                    List<EventDtoOutShort> events = eventsByCompId.get(compId);
-                    return toDto(
-                            compilationEntity,
-                            events == null ? Collections.emptyList() : events
-                    );
+                    List<EventDtoOutShort> events = eventsByCompId.getOrDefault(compId, Collections.emptyList());
+                    return toDto(compilationEntity, events);
                 })
                 .collect(Collectors.toList());
     }

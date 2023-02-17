@@ -19,10 +19,10 @@ public class CompilationEntity {
     private Long id;
 
     @Column(name = "pinned")
-    Boolean pinned;
+    private Boolean pinned;
 
     @Column(name = "title")
-    String title;
+    private String title;
 
     @Override
     public boolean equals(Object o) {

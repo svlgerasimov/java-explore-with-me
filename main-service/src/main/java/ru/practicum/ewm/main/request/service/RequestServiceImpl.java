@@ -84,7 +84,7 @@ public class RequestServiceImpl implements RequestService {
         RequestEntity requestEntity = findRequestEntityByIdAndRequesterId(requestId, userId);
         requestEntity.setStatus(RequestStatus.CANCELED);
         RequestDtoOut requestDtoOut = requestDtoMapper.toDto(requestEntity);
-        log.debug("Request canceled by requester: " + requestDtoOut);
+        log.debug("Request canceled by requester: {}", requestDtoOut);
         return  requestDtoOut;
     }
 
