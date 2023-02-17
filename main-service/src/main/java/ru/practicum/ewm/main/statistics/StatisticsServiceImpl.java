@@ -3,6 +3,7 @@ package ru.practicum.ewm.main.statistics;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 import org.springframework.web.reactive.function.client.WebClientException;
 import ru.practicum.ewm.stats.client.StatClient;
@@ -29,13 +30,15 @@ public class StatisticsServiceImpl implements StatisticsService {
             LocalDateTime.of(9999, 12, 31, 23, 59);
 
     private static final boolean UNIQUE_VIEWS = false;
+    @Value("${statistics.app_name}")
+    private String appName;
 
     @Override
     public void hitToStatistics(HttpServletRequest httpServletRequest) {
         try {
             statClient.saveHit(
                     StatDtoIn.builder()
-                            .app("ewm-main")
+                            .app(appName)
                             .uri(httpServletRequest.getRequestURI())
                             .ip(httpServletRequest.getRemoteAddr())
                             .timestamp(LocalDateTime.now())

@@ -4,9 +4,9 @@ import com.fasterxml.jackson.annotation.JsonFormat;
 import lombok.Value;
 import lombok.experimental.NonFinal;
 import lombok.experimental.SuperBuilder;
+import ru.practicum.ewm.main.util.validation.After;
 
 import javax.validation.Valid;
-import javax.validation.constraints.Future;
 import javax.validation.constraints.PositiveOrZero;
 import javax.validation.constraints.Size;
 import java.time.LocalDateTime;
@@ -25,7 +25,7 @@ public class EventDtoInPatch {
     String description;
 
     @JsonFormat(shape = JsonFormat.Shape.STRING, pattern = "yyyy-MM-dd HH:mm:ss")
-    @Future
+    @After(hours = 2)
     LocalDateTime eventDate;
 
     @Valid
