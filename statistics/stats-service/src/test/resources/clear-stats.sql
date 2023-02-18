@@ -1,0 +1,2 @@
+DELETE FROM stats;
+DELETE FROM apps;
