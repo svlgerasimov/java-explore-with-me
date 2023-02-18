@@ -1,0 +1,6 @@
+{
+  "status": "BAD_REQUEST",
+  "reason": "Incorrectly made request.",
+  "message": "Failed to convert value of ",
+  "timestamp": "2022-09-07 09:10:50"
+}
