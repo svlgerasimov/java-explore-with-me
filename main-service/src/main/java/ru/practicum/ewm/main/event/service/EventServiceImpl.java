@@ -308,7 +308,7 @@ public class EventServiceImpl implements EventService {
 
     private EventDtoOutPrivate returnPatchedEventDto(EventDtoInPatch eventDtoInPatch,
                                                      EventEntity eventEntity,
-                                                     ReviewEntity actualRejectionReview) {
+                                                     ReviewEntity reviewEntity) {
         Long categoryId = eventDtoInPatch.getCategory();
         eventDtoMapper.updateByDto(
                 eventEntity,
@@ -316,7 +316,9 @@ public class EventServiceImpl implements EventService {
                 categoryId == null ? null : findCategoryEntity(categoryId)
         );
 
-        return eventDtoMapper.toDtoPrivate(eventEntity, null, null, actualRejectionReview);
+        return eventDtoMapper.toDtoPrivate(eventEntity, null, null,
+                reviewEntity == null ? null :
+                        EventStateAdminAction.REJECT_EVENT.equals(reviewEntity.getAction()) ? reviewEntity : null);
     }
 
     private static void checkEventDate(LocalDateTime eventDate, LocalDateTime now) {
