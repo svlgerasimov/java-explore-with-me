@@ -13,7 +13,7 @@ import java.time.LocalDateTime;
 @Value
 @NonFinal
 @SuperBuilder
-public class EventDtoInPatch {
+public abstract class EventDtoInPatch {
 
     @Size(min = 20, max = 2000)
     String annotation;

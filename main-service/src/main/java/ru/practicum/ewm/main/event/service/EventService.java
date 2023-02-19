@@ -8,26 +8,28 @@ import java.time.LocalDateTime;
 import java.util.List;
 
 public interface EventService {
-    EventDtoOut add(Long userId, EventDtoIn eventDtoIn);
+    EventDtoOutPrivate add(Long userId, EventDtoIn eventDtoIn);
 
     List<EventDtoOutShort> findAllByInitiatorId(Long userId, Integer from, Integer size);
 
-    EventDtoOut findByEventIdAndInitiatorId(Long eventId, Long userId);
+    EventDtoOutPrivate findByEventIdAndInitiatorId(Long eventId, Long userId);
 
-    EventDtoOut patchByInitiator(Long eventId, Long userId, EventDtoInInitiatorPatch eventDtoInInitiatorPatch);
+    EventDtoOutPrivate patchByInitiator(Long eventId, Long userId, EventDtoInInitiatorPatch eventDtoInInitiatorPatch);
 
     @Transactional
-    EventDtoOut patchByAdmin(Long eventId, EventDtoInAdminPatch eventDtoInAdminPatch);
+    EventDtoOutPrivate patchByAdmin(Long eventId, EventDtoInAdminPatch eventDtoInAdminPatch);
 
-    List<EventDtoOut> findByFiltersAdmin(List<Long> users,
-                                         List<EventState> states,
-                                         List<Long> categories,
-                                         LocalDateTime rangeStart,
-                                         LocalDateTime rangeEnd,
-                                         Integer from,
-                                         Integer size);
+    List<EventDtoOutPrivate> findByFiltersAdmin(List<Long> users,
+                                               List<EventState> states,
+                                               List<Long> categories,
+                                               LocalDateTime rangeStart,
+                                               LocalDateTime rangeEnd,
+                                               Integer from,
+                                               Integer size);
 
-    EventDtoOut findPublishedEventById(Long eventId, HttpServletRequest httpServletRequest);
+    List<EventDtoOutPrivate> findAllPending(Integer from, Integer size);
+
+    EventDtoOutPublic findPublishedEventById(Long eventId, HttpServletRequest httpServletRequest);
 
     List<EventDtoOutShort> findPublishedEventsByFilters(String text, List<Long> categories, Boolean paid,
                                                         LocalDateTime rangeStart, LocalDateTime rangeEnd,

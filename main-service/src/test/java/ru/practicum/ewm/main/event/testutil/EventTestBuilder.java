@@ -41,8 +41,35 @@ public class EventTestBuilder {
         private Double lon = 31.31;
     }
 
-    public EventDtoOut buildEventDtoOut() {
-        return EventDtoOut.builder()
+    public EventDtoOutPublic buildEventDtoOutPublic() {
+        return EventDtoOutPublic.builder()
+                .annotation(annotation)
+                .category(
+                        categoryTestBuilder == null ? null : categoryTestBuilder.buildCategoryDtoOut()
+                )
+                .confirmedRequests(confirmedRequests)
+                .createdOn(createdOn)
+                .description(description)
+                .eventDate(eventDate)
+                .id(id)
+                .initiator(
+                        initiatorBuilder == null ? null : initiatorBuilder.buildDtoOutShort()
+                )
+                .location(
+                        location == null ? null : new LocationDto(location.lat, location.lon)
+                )
+                .paid(paid)
+                .participantLimit(participantLimit)
+                .publishedOn(publishedOn)
+                .requestModeration(requestModeration)
+                .state(state)
+                .title(title)
+                .views(views)
+                .build();
+    }
+
+    public EventDtoOutPrivate buildEventDtoOutPrivate() {
+        return EventDtoOutPrivate.builder()
                 .annotation(annotation)
                 .category(
                         categoryTestBuilder == null ? null : categoryTestBuilder.buildCategoryDtoOut()

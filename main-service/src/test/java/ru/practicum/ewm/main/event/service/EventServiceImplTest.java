@@ -7,7 +7,7 @@ import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.context.jdbc.Sql;
-import ru.practicum.ewm.main.event.dto.EventDtoOut;
+import ru.practicum.ewm.main.event.dto.EventDtoOutPrivate;
 import ru.practicum.ewm.main.event.dto.EventDtoOutShort;
 import ru.practicum.ewm.stats.client.StatClient;
 
@@ -33,9 +33,9 @@ class EventServiceImplTest {
     @Sql(scripts = "/sql/get-events-prepare.sql",
             executionPhase = Sql.ExecutionPhase.BEFORE_TEST_METHOD)
     void findByEventIdAndInitiatorIdTest() {
-        EventDtoOut eventDtoOut = eventService.findByEventIdAndInitiatorId(1L, 3L);
+        EventDtoOutPrivate eventDtoOut = eventService.findByEventIdAndInitiatorId(1L, 3L);
         assertThat(eventDtoOut).extracting(
-                EventDtoOut::getId,
+                EventDtoOutPrivate::getId,
                 dto -> dto.getInitiator().getId()
         )
                 .containsExactly(1L, 3L);

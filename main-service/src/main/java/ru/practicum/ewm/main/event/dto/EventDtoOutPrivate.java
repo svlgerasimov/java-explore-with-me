@@ -12,7 +12,7 @@ import java.time.LocalDateTime;
 @Value
 @Builder
 @Jacksonized
-public class EventDtoOut {
+public class EventDtoOutPrivate {
 
     String annotation;
 
@@ -48,4 +48,9 @@ public class EventDtoOut {
     String title;
 
     Long views;
+
+    // Если при последней модерации событие было отклонено и был оставлен комментарий,
+    // здесь будет комментарий и время модерации.
+    // Используется в эндпойнтах админской и приватной api.
+    ReviewDtoOut actualRejectionReview;
 }

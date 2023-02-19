@@ -13,12 +13,12 @@ import java.time.LocalDateTime;
 import static org.assertj.core.api.Assertions.assertThat;
 
 @JsonTest
-class EventDtoOutTest {
+class EventDtoOutPublicTest {
 
     @Autowired
-    private JacksonTester<EventDtoOut> jacksonTester;
+    private JacksonTester<EventDtoOutPublic> jacksonTester;
 
-    private final EventDtoOut eventDtoOut = EventDtoOut.builder()
+    private final EventDtoOutPublic eventDtoOut = EventDtoOutPublic.builder()
             .annotation("Эксклюзивность нашего шоу гарантирует привлечение максимальной зрительской аудитории")
             .category(
                     CategoryDtoOut.builder()

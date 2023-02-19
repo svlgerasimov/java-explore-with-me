@@ -41,4 +41,6 @@ public interface EventRepository
             "join fetch e.category " +
             "where e.id in :eventIds")
     List<EventEntity> findAllByIdIn(Collection<Long> eventIds);
+
+    List<EventEntity> findAllByState(EventState eventState, Pageable pageable);
 }
