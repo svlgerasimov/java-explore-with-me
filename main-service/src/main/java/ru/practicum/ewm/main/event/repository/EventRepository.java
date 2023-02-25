@@ -42,5 +42,10 @@ public interface EventRepository
             "where e.id in :eventIds")
     List<EventEntity> findAllByIdIn(Collection<Long> eventIds);
 
-    List<EventEntity> findAllByState(EventState eventState, Pageable pageable);
+    @Query(value = "select e from EventEntity e " +
+            "join fetch e.initiator " +
+            "join fetch e.category " +
+            "where e.state=:eventState")
+    List<EventEntity> findAllByState(@Param("eventState") EventState eventState,
+                                     Pageable pageable);
 }
