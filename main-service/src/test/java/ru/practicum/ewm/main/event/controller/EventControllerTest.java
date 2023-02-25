@@ -59,7 +59,7 @@ class EventControllerTest {
     void post_whenValidDto_thenStatusCreatedAndReturnDto() throws Exception {
         EventTestBuilder eventTestBuilder = EventTestBuilder.defaultBuilder();
         EventDtoIn eventDtoIn = eventTestBuilder.buildEventDtoIn();
-        EventDtoOut eventDtoOut = eventTestBuilder.buildEventDtoOut();
+        EventDtoOutPrivate eventDtoOut = eventTestBuilder.buildEventDtoOutPrivate();
         Long userId = 11L;
 
         when(eventService.add(eq(userId), eq(eventDtoIn)))
@@ -310,7 +310,7 @@ class EventControllerTest {
 
     @Test
     void findByEventIdAndInitiatorId_statusOkAndReturnDto() throws Exception {
-        EventDtoOut eventDtoOut = EventTestBuilder.defaultBuilder().buildEventDtoOut();
+        EventDtoOutPrivate eventDtoOut = EventTestBuilder.defaultBuilder().buildEventDtoOutPrivate();
 
         when(eventService.findByEventIdAndInitiatorId(22L, 11L))
                 .thenReturn(eventDtoOut);
@@ -324,7 +324,7 @@ class EventControllerTest {
     void patch_whenValidDto_thenStatusOkAndReturnDto() throws Exception {
         EventTestBuilder eventTestBuilder = EventTestBuilder.defaultBuilder();
         EventDtoInInitiatorPatch eventDtoInInitiatorPatch = eventTestBuilder.buildEventDtoInPatch();
-        EventDtoOut eventDtoOut = eventTestBuilder.buildEventDtoOut();
+        EventDtoOutPrivate eventDtoOut = eventTestBuilder.buildEventDtoOutPrivate();
 
         when(eventService.patchByInitiator(22L, 11L, eventDtoInInitiatorPatch))
                 .thenReturn(eventDtoOut);

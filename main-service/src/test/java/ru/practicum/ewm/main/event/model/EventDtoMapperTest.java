@@ -19,6 +19,7 @@ class EventDtoMapperTest {
     private static final EventDtoMapper mapper = new EventDtoMapperImpl(
             new UserDtoMapperImpl(),
             new CategoryDtoMapperImpl(),
+            new ReviewMapperImpl(),
             new LocationMapperImpl());
 
     @Test
@@ -91,9 +92,9 @@ class EventDtoMapperTest {
         EventEntity eventEntity = eventTestBuilder.buildEventEntity();
 
         eventTestBuilder.confirmedRequests(23).views(999L);
-        EventDtoOut eventDtoOut = eventTestBuilder.buildEventDtoOut();
+        EventDtoOutPublic eventDtoOut = eventTestBuilder.buildEventDtoOutPublic();
 
-        assertThat(mapper.toDtoFull(eventEntity, 23, 999L))
+        assertThat(mapper.toDtoPublic(eventEntity, 23, 999L))
                 .isEqualTo(eventDtoOut);
     }
 

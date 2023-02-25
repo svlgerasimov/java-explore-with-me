@@ -12,7 +12,9 @@ import ru.practicum.ewm.main.category.repository.CategoryRepository;
 import ru.practicum.ewm.main.event.dto.*;
 import ru.practicum.ewm.main.event.model.EventDtoMapper;
 import ru.practicum.ewm.main.event.model.EventEntity;
+import ru.practicum.ewm.main.event.model.ReviewEntity;
 import ru.practicum.ewm.main.event.repository.EventRepository;
+import ru.practicum.ewm.main.event.repository.ReviewRepository;
 import ru.practicum.ewm.main.exception.ConditionsNotMetException;
 import ru.practicum.ewm.main.exception.NotFoundException;
 import ru.practicum.ewm.main.exception.NotImplementedException;
@@ -27,6 +29,8 @@ import java.time.LocalDateTime;
 import java.util.Comparator;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
+import java.util.function.Function;
 import java.util.stream.Collectors;
 
 @Service
@@ -38,12 +42,13 @@ public class EventServiceImpl implements EventService {
     private final UserRepository userRepository;
     private final CategoryRepository categoryRepository;
     private final RequestRepository requestRepository;
+    private final ReviewRepository reviewRepository;
     private final EventDtoMapper eventDtoMapper;
     private final StatisticsService statisticsService;
 
     @Override
     @Transactional
-    public EventDtoOut add(Long userId, EventDtoIn eventDtoIn) {
+    public EventDtoOutPrivate add(Long userId, EventDtoIn eventDtoIn) {
         LocalDateTime eventDate = eventDtoIn.getEventDate();
         LocalDateTime now = LocalDateTime.now();
         checkEventDate(eventDate, now);
@@ -52,7 +57,8 @@ public class EventServiceImpl implements EventService {
         EventEntity eventEntity = eventDtoMapper.createFromDto(eventDtoIn, initiator, category, now);
         eventEntity = eventRepository.save(eventEntity);
 
-        EventDtoOut eventDtoOut = eventDtoMapper.toDtoFull(eventEntity, null, null);
+        EventDtoOutPrivate eventDtoOut = eventDtoMapper.toDtoPrivate(eventEntity,
+                null, null, null);
         log.debug("Add event {}", eventDtoOut);
         return eventDtoOut;
     }
@@ -74,16 +80,22 @@ public class EventServiceImpl implements EventService {
     }
 
     @Override
-    public EventDtoOut findByEventIdAndInitiatorId(Long eventId, Long userId) {
+    public EventDtoOutPrivate findByEventIdAndInitiatorId(Long eventId, Long userId) {
         EventEntity eventEntity = findEventEntityByIdAndInitiatorId(eventId, userId);
         int confirmedRequests = requestRepository.countByEventIdAndStatus(eventId, RequestStatus.CONFIRMED);
         long views = statisticsService.getViewsCountFromStatistics(eventId);
-        return eventDtoMapper.toDtoFull(eventEntity, confirmedRequests, views);
+
+        // Если при последней модерации событие было отклонено и был оставлен комментарий,
+        // то он будет прикреплен к dto
+        ReviewEntity reviewEntity = findActualRejectReview(eventEntity).orElse(null);
+
+        return eventDtoMapper.toDtoPrivate(eventEntity, confirmedRequests, views, reviewEntity);
     }
 
     @Override
     @Transactional
-    public EventDtoOut patchByInitiator(Long eventId, Long userId, EventDtoInInitiatorPatch eventDtoInInitiatorPatch) {
+    public EventDtoOutPrivate patchByInitiator(Long eventId, Long userId,
+                                               EventDtoInInitiatorPatch eventDtoInInitiatorPatch) {
 
         LocalDateTime eventDate = eventDtoInInitiatorPatch.getEventDate();
         if (eventDtoInInitiatorPatch.getEventDate() != null) {
@@ -117,18 +129,21 @@ public class EventServiceImpl implements EventService {
             }
         }
 
-        EventDtoOut eventDtoOut = returnPatchedEventDto(eventDtoInInitiatorPatch, eventEntity);
+        EventDtoOutPrivate eventDtoOut = returnPatchedEventDto(eventDtoInInitiatorPatch,
+                eventEntity, null);
         log.debug("Patch event {} by initiator", eventDtoOut);
         return eventDtoOut;
     }
 
     @Override
     @Transactional
-    public EventDtoOut patchByAdmin(Long eventId, EventDtoInAdminPatch eventDtoInAdminPatch) {
+    public EventDtoOutPrivate patchByAdmin(Long eventId, EventDtoInAdminPatch eventDtoInAdminPatch) {
+
+        LocalDateTime now = LocalDateTime.now();
 
         LocalDateTime eventDate = eventDtoInAdminPatch.getEventDate();
         if (eventDtoInAdminPatch.getEventDate() != null) {
-            checkEventDate(eventDate, LocalDateTime.now());
+            checkEventDate(eventDate, now);
         }
 
         EventEntity eventEntity = findEventEntity(eventId);
@@ -140,32 +155,46 @@ public class EventServiceImpl implements EventService {
         }
 
         EventStateAdminAction requiredAction = eventDtoInAdminPatch.getStateAction();
+        ReviewEntity reviewEntity = null;
 
-        switch (requiredAction) {
-            case PUBLISH_EVENT:
-                eventEntity.setState(EventState.PUBLISHED);
-                eventEntity.setPublishedOn(LocalDateTime.now());
-                break;
-            case REJECT_EVENT:
-                eventEntity.setState(EventState.CANCELED);
-                break;
-            default:
-                throw new NotImplementedException("Action " + requiredAction + " is not implemented.");
+        if (requiredAction != null) {
+            reviewEntity = new ReviewEntity();
+            reviewEntity.setEvent(eventEntity);
+            reviewEntity.setCreatedOn(now);
+            String rejectionComment = eventDtoInAdminPatch.getRejectionComment();
+            switch (requiredAction) {
+                case PUBLISH_EVENT:
+                    if (rejectionComment != null) {
+                        throw new ConditionsNotMetException("Only rejection review can contain a comment.");
+                    }
+                    eventEntity.setState(EventState.PUBLISHED);
+                    eventEntity.setPublishedOn(now);
+                    reviewEntity.setAction(EventStateAdminAction.PUBLISH_EVENT);
+                    break;
+                case REJECT_EVENT:
+                    eventEntity.setState(EventState.CANCELED);
+                    reviewEntity.setAction(EventStateAdminAction.REJECT_EVENT);
+                    reviewEntity.setComment(rejectionComment);
+                    break;
+                default:
+                    throw new NotImplementedException("Action " + requiredAction + " is not implemented.");
+            }
+            reviewEntity = reviewRepository.save(reviewEntity);
         }
 
-        EventDtoOut eventDtoOut = returnPatchedEventDto(eventDtoInAdminPatch, eventEntity);
+        EventDtoOutPrivate eventDtoOut = returnPatchedEventDto(eventDtoInAdminPatch, eventEntity, reviewEntity);
         log.debug("Patch event {} by admin", eventDtoOut);
         return eventDtoOut;
     }
 
     @Override
-    public List<EventDtoOut> findByFiltersAdmin(List<Long> users,
-                                                List<EventState> states,
-                                                List<Long> categories,
-                                                LocalDateTime rangeStart,
-                                                LocalDateTime rangeEnd,
-                                                Integer from,
-                                                Integer size) {
+    public List<EventDtoOutPrivate> findByFiltersAdmin(List<Long> users,
+                                                      List<EventState> states,
+                                                      List<Long> categories,
+                                                      LocalDateTime rangeStart,
+                                                      LocalDateTime rangeEnd,
+                                                      Integer from,
+                                                      Integer size) {
 
         List<EventEntity> eventEntities = eventRepository.findByFiltersAdmin(
                 users,
@@ -177,23 +206,18 @@ public class EventServiceImpl implements EventService {
                 size
         );
 
-        Map<Long, Integer> requestCountsByEventId =
-                requestRepository.findConfirmedRequestsCountsByEvent(eventEntities);
-        List<Long> eventIds = eventEntities.stream()
-                .map(EventEntity::getId)
-                .collect(Collectors.toList());
-        Map<Long, Long> viewCountsByEventId =
-                statisticsService.getViewsCountByEventIdFromStatistics(eventIds);
-
-        return eventDtoMapper.toDtoFull(
-                eventEntities,
-                requestCountsByEventId,
-                viewCountsByEventId
-        );
+        return getEventDtoOutPrivates(eventEntities);
     }
 
     @Override
-    public EventDtoOut findPublishedEventById(Long eventId, HttpServletRequest httpServletRequest) {
+    public List<EventDtoOutPrivate> findAllPending(Integer from, Integer size) {
+        Pageable pageable = PageRequest.of(from / size, size);
+        List<EventEntity> eventEntities = eventRepository.findAllByState(EventState.PENDING, pageable);
+        return getEventDtoOutPrivates(eventEntities);
+    }
+
+    @Override
+    public EventDtoOutPublic findPublishedEventById(Long eventId, HttpServletRequest httpServletRequest) {
         EventEntity eventEntity = eventRepository.findByIdAndState(eventId, EventState.PUBLISHED)
                 .orElseThrow(() -> new NotFoundException("Published event with id=" + eventId + " was not found"));
         int confirmedRequests = requestRepository.countByEventIdAndStatus(eventId, RequestStatus.CONFIRMED);
@@ -201,7 +225,7 @@ public class EventServiceImpl implements EventService {
 
         statisticsService.hitToStatistics(httpServletRequest);
 
-        return eventDtoMapper.toDtoFull(eventEntity, confirmedRequests, views);
+        return eventDtoMapper.toDtoPublic(eventEntity, confirmedRequests, views);
     }
 
     @Override
@@ -282,7 +306,9 @@ public class EventServiceImpl implements EventService {
                 viewCountsByEventId);
     }
 
-    private EventDtoOut returnPatchedEventDto(EventDtoInPatch eventDtoInPatch, EventEntity eventEntity) {
+    private EventDtoOutPrivate returnPatchedEventDto(EventDtoInPatch eventDtoInPatch,
+                                                     EventEntity eventEntity,
+                                                     ReviewEntity reviewEntity) {
         Long categoryId = eventDtoInPatch.getCategory();
         eventDtoMapper.updateByDto(
                 eventEntity,
@@ -290,13 +316,58 @@ public class EventServiceImpl implements EventService {
                 categoryId == null ? null : findCategoryEntity(categoryId)
         );
 
-        return eventDtoMapper.toDtoFull(eventEntity, null, null);
+        return eventDtoMapper.toDtoPrivate(eventEntity, null, null,
+                reviewEntity == null ? null :
+                        EventStateAdminAction.REJECT_EVENT.equals(reviewEntity.getAction()) ? reviewEntity : null);
     }
 
     private static void checkEventDate(LocalDateTime eventDate, LocalDateTime now) {
         if (eventDate.minusHours(2).isBefore(now)) {
             throw new ConditionsNotMetException("Event date must be at least 2 hours in future.");
         }
+    }
+
+    // Если при последней модерации событие было отклонено и был оставлен комментарий,
+    // возвращает Optional данных этой модерации
+    private Optional<ReviewEntity> findActualRejectReview(EventEntity eventEntity) {
+        return reviewRepository.findFirstByEventOrderByCreatedOnDesc(eventEntity)
+                .filter(review ->
+                        EventStateAdminAction.REJECT_EVENT.equals(review.getAction())
+                                && review.getComment() != null);
+    }
+
+    // Строит соответствие id событий с данными последней модерации события при условии,
+    // что событие было отклонено и был оставлен комментарий
+    private Map<Long, ReviewEntity> findActualRejectReviewByEvent(List<Long> eventIds) {
+        return reviewRepository.findAllByEventIdIn(eventIds).stream()
+                .collect(Collectors.toMap(
+                        reviewEntity -> reviewEntity.getEvent().getId(),
+                        Function.identity(),
+                        (review1, review2) ->
+                                review2.getCreatedOn().isAfter(review1.getCreatedOn()) ? review2 : review1))
+                .entrySet().stream()
+                .filter(entry ->
+                        EventStateAdminAction.REJECT_EVENT.equals(entry.getValue().getAction())
+                                && entry.getValue().getComment() != null)
+                .collect(Collectors.toMap(Map.Entry::getKey, Map.Entry::getValue));
+    }
+
+    private List<EventDtoOutPrivate> getEventDtoOutPrivates(List<EventEntity> eventEntities) {
+        Map<Long, Integer> requestCountsByEventId =
+                requestRepository.findConfirmedRequestsCountsByEvent(eventEntities);
+        List<Long> eventIds = eventEntities.stream()
+                .map(EventEntity::getId)
+                .collect(Collectors.toList());
+        Map<Long, Long> viewCountsByEventId =
+                statisticsService.getViewsCountByEventIdFromStatistics(eventIds);
+        Map<Long, ReviewEntity> actualRejectReviewByEventId = findActualRejectReviewByEvent(eventIds);
+
+        return eventDtoMapper.toDtoPrivate(
+                eventEntities,
+                requestCountsByEventId,
+                viewCountsByEventId,
+                actualRejectReviewByEventId
+        );
     }
 
     private EventEntity findEventEntity(Long id) {

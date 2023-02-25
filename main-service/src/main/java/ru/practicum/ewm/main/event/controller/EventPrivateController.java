@@ -22,8 +22,8 @@ public class EventPrivateController {
 
     @PostMapping("/users/{userId}/events")
     @ResponseStatus(HttpStatus.CREATED)
-    public EventDtoOut post(@PathVariable Long userId,
-                            @Valid @RequestBody EventDtoIn eventDtoIn) {
+    public EventDtoOutPrivate post(@PathVariable Long userId,
+                                  @Valid @RequestBody EventDtoIn eventDtoIn) {
         return eventService.add(userId, eventDtoIn);
     }
 
@@ -36,14 +36,14 @@ public class EventPrivateController {
     }
 
     @GetMapping("/users/{userId}/events/{eventId}")
-    public EventDtoOut findByEventIdAndInitiatorId(
+    public EventDtoOutPrivate findByEventIdAndInitiatorId(
             @PathVariable Long eventId,
             @PathVariable Long userId) {
         return eventService.findByEventIdAndInitiatorId(eventId, userId);
     }
 
     @PatchMapping("/users/{userId}/events/{eventId}")
-    public EventDtoOut patchByInitiator(
+    public EventDtoOutPrivate patchByInitiator(
             @PathVariable Long eventId,
             @PathVariable Long userId,
             @RequestBody @Valid EventDtoInInitiatorPatch eventDtoInInitiatorPatch) {

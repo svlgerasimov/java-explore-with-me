@@ -22,14 +22,14 @@ public class EventAdminController {
     private final EventService eventService;
 
     @PatchMapping("/admin/events/{eventId}")
-    public EventDtoOut patchByAdmin(
+    public EventDtoOutPrivate patchByAdmin(
             @PathVariable Long eventId,
             @RequestBody @Valid EventDtoInAdminPatch eventDtoInAdminPatch) {
         return eventService.patchByAdmin(eventId, eventDtoInAdminPatch);
     }
 
     @GetMapping("/admin/events")
-    public List<EventDtoOut> findByFiltersAdmin(
+    public List<EventDtoOutPrivate> findByFiltersAdmin(
             @RequestParam(required = false) List<Long> users,
             @RequestParam(required = false) List<EventState> states,
             @RequestParam(required = false) List<Long> categories,
@@ -38,5 +38,12 @@ public class EventAdminController {
             @RequestParam(defaultValue = "0") @PositiveOrZero Integer from,
             @RequestParam(defaultValue = "10") @Positive Integer size) {
         return eventService.findByFiltersAdmin(users, states, categories, rangeStart, rangeEnd, from, size);
+    }
+
+    @GetMapping("/admin/events/pending")
+    public List<EventDtoOutPrivate> findAllPending(
+            @RequestParam(defaultValue = "0") @PositiveOrZero Integer from,
+            @RequestParam(defaultValue = "10") @Positive Integer size) {
+        return eventService.findAllPending(from, size);
     }
 }

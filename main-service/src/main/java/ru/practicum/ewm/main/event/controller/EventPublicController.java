@@ -23,8 +23,8 @@ public class EventPublicController {
     private final EventService eventService;
 
     @GetMapping("/events/{id}")
-    public EventDtoOut findPublishedEventById(@PathVariable("id") Long eventId,
-                                              HttpServletRequest httpServletRequest) {
+    public EventDtoOutPublic findPublishedEventById(@PathVariable("id") Long eventId,
+                                                    HttpServletRequest httpServletRequest) {
         return eventService.findPublishedEventById(eventId, httpServletRequest);
     }
 

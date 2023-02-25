@@ -12,4 +12,6 @@ import lombok.extern.jackson.Jacksonized;
 public class EventDtoInAdminPatch extends EventDtoInPatch {
 
     EventStateAdminAction stateAction;
+
+    String rejectionComment;
 }
