@@ -6,7 +6,6 @@ Backend приложения-афиши, позволяющего пользов
 об интересных событиях и находить компанию для участия в них.
 
 ---
-:PushPin:
 ### Стек технологий
 
 ![Java](https://img.shields.io/badge/java-%23ED8B00.svg?style=for-the-badge&logo=java&logoColor=white)
